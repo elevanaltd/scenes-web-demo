@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react'
+import { NavigationProvider as SharedNavigationProvider, useNavigation as useSharedNavigation } from '@elevanaltd/shared-lib'
 import type { Project, Video, Script, ScriptComponent } from '../types'
 
 interface NavigationState {
@@ -9,8 +10,8 @@ interface NavigationState {
 }
 
 interface NavigationContextValue extends NavigationState {
-  setSelectedProject: (project: Project | undefined) => void
-  setSelectedVideo: (video: Video | undefined) => void
+  setSelectedProject: (project: Project | undefined | null) => void
+  setSelectedVideo: (video: Video | undefined | null, project?: Project | undefined | null) => void
   setSelectedScript: (script: Script | undefined) => void
   setSelectedComponent: (component: ScriptComponent | undefined) => void
 }
@@ -20,29 +21,14 @@ const NavigationContext = createContext<NavigationContextValue | undefined>(unde
 /**
  * Navigation Context Provider
  *
- * Manages hierarchical navigation state: Project → Video → Script → Component
- * When parent selection changes, child selections are cleared to prevent invalid states
+ * Wraps @elevanaltd/shared-lib NavigationProvider and extends it with app-specific state
+ * Manages hierarchical navigation: Project → Video → Script → Component
+ * Projects/Videos managed by shared-lib; Scripts/Components managed locally
  */
-export function NavigationProvider({ children }: { children: React.ReactNode }) {
-  const [selectedProject, setSelectedProjectState] = useState<Project | undefined>()
-  const [selectedVideo, setSelectedVideoState] = useState<Video | undefined>()
+function NavigationProviderContent({ children }: { children: React.ReactNode }) {
+  const sharedNav = useSharedNavigation()
   const [selectedScript, setSelectedScriptState] = useState<Script | undefined>()
   const [selectedComponent, setSelectedComponentState] = useState<ScriptComponent | undefined>()
-
-  const setSelectedProject = (project: Project | undefined) => {
-    setSelectedProjectState(project)
-    // Clear children when parent changes
-    setSelectedVideoState(undefined)
-    setSelectedScriptState(undefined)
-    setSelectedComponentState(undefined)
-  }
-
-  const setSelectedVideo = (video: Video | undefined) => {
-    setSelectedVideoState(video)
-    // Clear children when parent changes
-    setSelectedScriptState(undefined)
-    setSelectedComponentState(undefined)
-  }
 
   const setSelectedScript = (script: Script | undefined) => {
     setSelectedScriptState(script)
@@ -55,12 +41,13 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
   }
 
   const value: NavigationContextValue = {
-    selectedProject,
-    selectedVideo,
+    // @elevanaltd/shared-lib types are compatible - casting local types which are supersets
+    selectedProject: (sharedNav.selectedProject as unknown as Project) || undefined,
+    selectedVideo: (sharedNav.selectedVideo as unknown as Video) || undefined,
     selectedScript,
     selectedComponent,
-    setSelectedProject,
-    setSelectedVideo,
+    setSelectedProject: (project) => sharedNav.setSelectedProject(project as unknown as Parameters<typeof sharedNav.setSelectedProject>[0]),
+    setSelectedVideo: (video, project) => sharedNav.setSelectedVideo(video as unknown as Parameters<typeof sharedNav.setSelectedVideo>[0], project as unknown as Parameters<typeof sharedNav.setSelectedVideo>[1]),
     setSelectedScript,
     setSelectedComponent,
   }
@@ -69,6 +56,14 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
     <NavigationContext.Provider value={value}>
       {children}
     </NavigationContext.Provider>
+  )
+}
+
+export function NavigationProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <SharedNavigationProvider>
+      <NavigationProviderContent>{children}</NavigationProviderContent>
+    </SharedNavigationProvider>
   )
 }
 

@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { NavigationProvider as SharedNavigationProvider } from '@elevanaltd/shared-lib'
 import '@elevanaltd/ui/dist/index.css'
 import { AuthProvider } from './contexts/AuthContext'
 import { NavigationProvider } from './contexts/NavigationContext'
@@ -44,16 +43,14 @@ function ScenesWorkspace() {
 
   return (
     <div className="app-layout">
-      <SharedNavigationProvider>
-        <ScenesNavigationContainer
-          onComponentSelected={(componentId) => {
-            const component = componentsQuery.data?.find(c => c.id === componentId)
-            if (component) {
-              nav.setSelectedComponent(component)
-            }
-          }}
-        />
-      </SharedNavigationProvider>
+      <ScenesNavigationContainer
+        onComponentSelected={(componentId) => {
+          const component = componentsQuery.data?.find(c => c.id === componentId)
+          if (component) {
+            nav.setSelectedComponent(component)
+          }
+        }}
+      />
       <div className="main-content">
         <div className="header">
           <h1>Scene Planning & Shot Lists</h1>
