@@ -3,25 +3,26 @@ import { getSupabaseClient } from '../lib/supabase'
 import type { Video } from '../types'
 
 /**
- * Fetch videos for a specific project
+ * Fetch videos for a specific project (via eav_code)
+ * Videos link to projects through eav_code, not direct foreign key
  */
-export function useVideos(projectId: string | undefined) {
+export function useVideos(projectEavCode: string | undefined) {
   return useQuery({
-    queryKey: ['videos', projectId],
+    queryKey: ['videos', projectEavCode],
     queryFn: async () => {
-      if (!projectId) return []
+      if (!projectEavCode) return []
 
       const supabase = getSupabaseClient()
 
       const { data, error } = await supabase
         .from('videos')
         .select('id, title, eav_code, created_at')
-        .eq('project_id', projectId)
+        .eq('eav_code', projectEavCode)
 
       if (error) throw error
 
       return (data || []) as Video[]
     },
-    enabled: !!projectId,
+    enabled: !!projectEavCode,
   })
 }

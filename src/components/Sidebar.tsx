@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useProjects } from '../hooks/useProjects'
 import { useVideos } from '../hooks/useVideos'
 import { useScripts } from '../hooks/useScripts'
@@ -20,7 +20,8 @@ interface SidebarProps {
 /**
  * Navigation Sidebar
  *
- * Hierarchical drill-down: Projects → Videos → Scripts → Components
+ * Hierarchical structure: Projects (with nested Videos) → Scripts → Components
+ * Videos collapse/expand under each project
  * Components are read-only (displayed but not editable in this app)
  *
  * North Star I1: Component spine is immutable in scenes-web
@@ -36,13 +37,28 @@ export function Sidebar({
   onSelectComponent,
 }: SidebarProps) {
   const projectsQuery = useProjects()
-  const videosQuery = useVideos(selectedProject?.id)
+  const videosQuery = useVideos(selectedProject?.eav_code)
   const scriptsQuery = useScripts(selectedVideo?.id)
   const componentsQuery = useScriptComponents(selectedScript?.id)
 
+  // Track which projects are expanded
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
+    selectedProject ? new Set([selectedProject.id]) : new Set()
+  )
+
+  const toggleProjectExpanded = (projectId: string) => {
+    const newExpanded = new Set(expandedProjects)
+    if (newExpanded.has(projectId)) {
+      newExpanded.delete(projectId)
+    } else {
+      newExpanded.add(projectId)
+    }
+    setExpandedProjects(newExpanded)
+  }
+
   return (
     <div className="sidebar">
-      {/* Projects Section */}
+      {/* Projects Section (with nested videos) */}
       <div className="sidebar-section">
         <h3 className="sidebar-title">Projects</h3>
         {projectsQuery.isLoading && <div className="sidebar-loading">Loading...</div>}
@@ -51,40 +67,54 @@ export function Sidebar({
         )}
         <div className="sidebar-list">
           {projectsQuery.data?.map((project) => (
-            <button
-              key={project.id}
-              className={`sidebar-item ${selectedProject?.id === project.id ? 'active' : ''}`}
-              onClick={() => onSelectProject(project)}
-            >
-              <span className="sidebar-item-title">{project.title}</span>
-              <span className="sidebar-item-code">{project.eav_code}</span>
-            </button>
+            <div key={project.id}>
+              {/* Project Header with Expand/Collapse */}
+              <div className="project-row">
+                <button
+                  className="expand-toggle"
+                  onClick={() => toggleProjectExpanded(project.id)}
+                  title={expandedProjects.has(project.id) ? 'Collapse' : 'Expand'}
+                >
+                  {expandedProjects.has(project.id) ? '▼' : '▶'}
+                </button>
+                <button
+                  className={`sidebar-item project-item ${selectedProject?.id === project.id ? 'active' : ''}`}
+                  onClick={() => {
+                    onSelectProject(project)
+                    toggleProjectExpanded(project.id)
+                  }}
+                >
+                  <span className="sidebar-item-title">{project.title}</span>
+                  <span className="sidebar-item-code">{project.eav_code}</span>
+                </button>
+              </div>
+
+              {/* Nested Videos (shown when project expanded) */}
+              {expandedProjects.has(project.id) && selectedProject?.id === project.id && (
+                <div className="videos-container">
+                  {videosQuery.isLoading && <div className="sidebar-loading">Loading videos...</div>}
+                  {videosQuery.error && (
+                    <div className="sidebar-error">Error loading videos</div>
+                  )}
+                  {videosQuery.data && videosQuery.data.length === 0 && (
+                    <div className="sidebar-loading">No videos</div>
+                  )}
+                  {videosQuery.data?.map((video) => (
+                    <button
+                      key={video.id}
+                      className={`sidebar-item video-item ${selectedVideo?.id === video.id ? 'active' : ''}`}
+                      onClick={() => onSelectVideo(video)}
+                    >
+                      <span className="sidebar-item-title">{video.title}</span>
+                      <span className="sidebar-item-code">{video.eav_code}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </div>
       </div>
-
-      {/* Videos Section */}
-      {selectedProject && (
-        <div className="sidebar-section">
-          <h3 className="sidebar-title">Videos</h3>
-          {videosQuery.isLoading && <div className="sidebar-loading">Loading...</div>}
-          {videosQuery.error && (
-            <div className="sidebar-error">Error loading videos</div>
-          )}
-          <div className="sidebar-list">
-            {videosQuery.data?.map((video) => (
-              <button
-                key={video.id}
-                className={`sidebar-item ${selectedVideo?.id === video.id ? 'active' : ''}`}
-                onClick={() => onSelectVideo(video)}
-              >
-                <span className="sidebar-item-title">{video.title}</span>
-                <span className="sidebar-item-code">{video.eav_code}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Scripts Section */}
       {selectedVideo && (

@@ -9,6 +9,7 @@ export interface Project {
   id: string
   title: string
   eav_code: string
+  project_phase?: string
   created_at: string
 }
 

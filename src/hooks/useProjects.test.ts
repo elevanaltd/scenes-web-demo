@@ -29,17 +29,17 @@ describe('useProjects', () => {
 
   it('should fetch projects for current user via user_clients RLS', async () => {
     const mockProjects = [
-      { id: '1', title: 'Project A', eav_code: 'P001', created_at: '2025-01-01' },
-      { id: '2', title: 'Project B', eav_code: 'P002', created_at: '2025-01-02' },
+      { id: '1', title: 'Project A', eav_code: 'P001', project_phase: 'Pre-Production', created_at: '2025-01-01' },
+      { id: '2', title: 'Project B', eav_code: 'P002', project_phase: 'In Production', created_at: '2025-01-02' },
     ]
 
-    const mockSelect = vi.fn().mockResolvedValue({
-      data: mockProjects,
-      error: null,
-    })
-
     mockSupabase.from.mockReturnValue({
-      select: mockSelect,
+      select: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      order: vi.fn().mockResolvedValue({
+        data: mockProjects,
+        error: null,
+      }),
     })
 
     const { result } = renderHook(() => useProjects(), { wrapper })
@@ -54,7 +54,9 @@ describe('useProjects', () => {
 
   it('should handle loading state correctly', () => {
     mockSupabase.from.mockReturnValue({
-      select: vi.fn().mockImplementation(
+      select: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      order: vi.fn().mockImplementation(
         () =>
           new Promise(() => {
             /* never resolves */
@@ -71,7 +73,9 @@ describe('useProjects', () => {
     const mockError = new Error('Supabase error')
 
     mockSupabase.from.mockReturnValue({
-      select: vi.fn().mockResolvedValue({
+      select: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      order: vi.fn().mockResolvedValue({
         data: null,
         error: mockError,
       }),

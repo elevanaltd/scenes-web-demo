@@ -169,11 +169,12 @@ describe('Sidebar', () => {
     expect(onSelectProject).toHaveBeenCalledWith(mockProject)
   })
 
-  it('should display videos only when project is selected', async () => {
+  it('should display videos when project is selected and expanded', async () => {
     const mockProject = {
       id: '1',
       title: 'Project A',
       eav_code: 'P001',
+      project_phase: 'In Production',
       created_at: '2025-01-01',
     }
 
@@ -219,8 +220,9 @@ describe('Sidebar', () => {
       { wrapper }
     )
 
+    // With selectedProject set, the component should automatically expand and show videos
     await waitFor(() => {
-      expect(screen.getByText('Videos')).toBeInTheDocument()
+      expect(screen.getByText('Project A')).toBeInTheDocument()
       expect(screen.getByText('Video A')).toBeInTheDocument()
     })
   })

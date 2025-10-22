@@ -4,6 +4,7 @@ import type { Project } from '../types'
 
 /**
  * Fetch projects accessible to current user via user_clients RLS
+ * Filters to only active production phases
  *
  * North Star I2: Multi-client data isolation
  * RLS ensures users see only their authorized projects
@@ -16,7 +17,9 @@ export function useProjects() {
 
       const { data, error } = await supabase
         .from('projects')
-        .select('id, title, eav_code, created_at')
+        .select('id, title, eav_code, project_phase, created_at')
+        .in('project_phase', ['Pre-Production', 'In Production', 'Post-Production'])
+        .order('title', { ascending: true })
 
       if (error) throw error
 

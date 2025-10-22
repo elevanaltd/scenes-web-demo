@@ -1,4 +1,5 @@
 import React from 'react'
+import { useScene } from '../hooks/useScene'
 import { useShots } from '../hooks/useShots'
 import { useDropdownOptions } from '../hooks/useDropdownOptions'
 import { useShotMutations } from '../hooks/useShotMutations'
@@ -18,9 +19,9 @@ interface ShotTableProps {
  * North Star I6: Independent shots table (scene_planning_state association)
  */
 export function ShotTable({ component }: ShotTableProps) {
-  // Create a scene_id based on component (ideally from scene_planning_state)
-  // For now, use component.id as scene_id (will be refactored in Phase 3)
-  const sceneId = component.id
+  // Get or create scene_planning_state record for this component
+  const sceneQuery = useScene(component.id)
+  const sceneId = sceneQuery.data?.id
 
   const shotsQuery = useShots(sceneId)
   const dropdownsQuery = useDropdownOptions()
@@ -56,8 +57,12 @@ export function ShotTable({ component }: ShotTableProps) {
     }
   }
 
-  if (shotsQuery.isLoading) {
+  if (sceneQuery.isLoading || shotsQuery.isLoading) {
     return <div className="shot-table-loading">Loading shots...</div>
+  }
+
+  if (sceneQuery.error) {
+    return <div className="shot-table-error">Error creating/loading scene</div>
   }
 
   if (shotsQuery.error) {
