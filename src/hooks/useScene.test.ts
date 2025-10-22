@@ -10,6 +10,7 @@ vi.mock('../lib/supabase', () => ({
 }))
 
 describe('useScene', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockSupabase: any
   let queryClient: QueryClient
 

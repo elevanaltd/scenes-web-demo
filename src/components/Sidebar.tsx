@@ -71,7 +71,7 @@ export function Sidebar({
         scriptsError: scriptsQuery.error?.message,
       })
     }
-  }, [selectedVideo?.id, scriptsQuery.isLoading, scriptsQuery.data?.length, scriptsQuery.error?.message])
+  }, [selectedVideo, selectedVideo?.id, videosQuery.isLoading, videosQuery.data?.length, videosQuery.error?.message, scriptsQuery.isLoading, scriptsQuery.data?.length, scriptsQuery.error?.message])
 
   React.useEffect(() => {
     console.log('[Sidebar] selectedScript changed:', selectedScript ? `${selectedScript.plain_text.substring(0, 30)} (${selectedScript.id})` : 'none')
@@ -83,7 +83,7 @@ export function Sidebar({
         componentsError: componentsQuery.error?.message,
       })
     }
-  }, [selectedScript?.id, componentsQuery.isLoading, componentsQuery.data?.length, componentsQuery.error?.message])
+  }, [selectedScript, selectedScript?.id, componentsQuery.isLoading, componentsQuery.data?.length, componentsQuery.error?.message])
 
   // Track which projects are expanded
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
@@ -96,7 +96,7 @@ export function Sidebar({
       // Ensure selected project is expanded (but don't collapse others)
       setExpandedProjects(prev => new Set([...prev, selectedProject.id]))
     }
-  }, [selectedProject?.id])
+  }, [selectedProject])
 
   const toggleProjectExpanded = (projectId: string) => {
     console.log('[Sidebar] Toggle expand for project:', projectId)

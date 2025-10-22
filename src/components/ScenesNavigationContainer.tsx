@@ -31,15 +31,23 @@ export function ScenesNavigationContainer({ onComponentSelected: _onComponentSel
   // When video is selected, automatically load and set its script
   // This enables useScriptComponents(selectedScript.id) to fetch components
   useEffect(() => {
-    if (selectedVideo?.id && scriptsQuery.data && scriptsQuery.data.length > 0) {
-      // North Star I6: One script per video (unique constraint)
-      const script = scriptsQuery.data[0]
-      setSelectedScript(script)
-    } else if (!selectedVideo?.id) {
-      // Clear script when video is deselected
+    // If no video selected, clear script
+    if (!selectedVideo?.id) {
       setSelectedScript(undefined)
+      return
     }
-  }, [selectedVideo?.id, scriptsQuery.data, setSelectedScript])
+
+    // If video is selected but script query has error or no data, clear script
+    if (scriptsQuery.error || !scriptsQuery.data || scriptsQuery.data.length === 0) {
+      setSelectedScript(undefined)
+      return
+    }
+
+    // North Star I6: One script per video (unique constraint)
+    // Set the script only if we have valid data
+    const script = scriptsQuery.data[0]
+    setSelectedScript(script)
+  }, [selectedVideo?.id, scriptsQuery.data, scriptsQuery.error, setSelectedScript])
 
   const handleProjectExpand = (projectId: string) => {
     const newExpanded = new Set(expandedProjects)

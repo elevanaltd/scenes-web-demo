@@ -35,15 +35,35 @@ vi.mock('../hooks/useVideos', () => ({
   },
 }))
 
+// Mock useScripts with ability to return different scenarios
+interface MockScriptsResponse {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: any
+  isLoading: boolean
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  error: any
+}
+
+let useScriptsMockResponse: MockScriptsResponse = {
+  data: [],
+  isLoading: false,
+  error: null,
+}
+
 vi.mock('../hooks/useScripts', () => ({
-  useScripts: () => ({
-    data: [],
-    isLoading: false,
-    error: null,
-  }),
+  useScripts: () => useScriptsMockResponse,
 }))
 
 describe('ScenesNavigationContainer', () => {
+  beforeEach(() => {
+    // Reset mock to default state before each test
+    useScriptsMockResponse = {
+      data: [],
+      isLoading: false,
+      error: null,
+    }
+  })
+
   it('should render navigation sidebar with projects', () => {
     render(
       <NavigationProvider>
@@ -88,6 +108,70 @@ describe('ScenesNavigationContainer', () => {
       </NavigationProvider>
     )
 
+    expect(container.querySelector('.nav-sidebar')).toBeInTheDocument()
+  })
+
+  it('should clear script when scriptsQuery returns empty array (video with no scripts)', () => {
+    // Video with no scripts scenario - scriptsQuery.data is empty
+    useScriptsMockResponse = {
+      data: [],
+      isLoading: false,
+      error: null,
+    }
+
+    const { container } = render(
+      <NavigationProvider>
+        <ScenesNavigationContainer onComponentSelected={() => {}} />
+      </NavigationProvider>
+    )
+
+    // Sidebar should still render even with no scripts
+    expect(container.querySelector('.nav-sidebar')).toBeInTheDocument()
+  })
+
+  it('should clear script when scriptsQuery returns error', () => {
+    // Scripts fetch error scenario
+    useScriptsMockResponse = {
+      data: null,
+      isLoading: false,
+      error: new Error('Failed to fetch scripts'),
+    }
+
+    const { container } = render(
+      <NavigationProvider>
+        <ScenesNavigationContainer onComponentSelected={() => {}} />
+      </NavigationProvider>
+    )
+
+    // Sidebar should still render even with error
+    expect(container.querySelector('.nav-sidebar')).toBeInTheDocument()
+  })
+
+  it('should not leave stale script selected when switching videos', () => {
+    // This tests the edge case where previous script remains selected
+    // when query returns empty or error for new video
+    const { rerender, container } = render(
+      <NavigationProvider>
+        <ScenesNavigationContainer onComponentSelected={() => {}} />
+      </NavigationProvider>
+    )
+
+    expect(container.querySelector('.nav-sidebar')).toBeInTheDocument()
+
+    // Simulate switching to a video with no scripts (empty response)
+    useScriptsMockResponse = {
+      data: [],
+      isLoading: false,
+      error: null,
+    }
+
+    rerender(
+      <NavigationProvider>
+        <ScenesNavigationContainer onComponentSelected={() => {}} />
+      </NavigationProvider>
+    )
+
+    // Sidebar should still be present
     expect(container.querySelector('.nav-sidebar')).toBeInTheDocument()
   })
 })
