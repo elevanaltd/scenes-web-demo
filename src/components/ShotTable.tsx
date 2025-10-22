@@ -42,6 +42,7 @@ export function ShotTable({ component }: ShotTableProps) {
   }, [dropdownsQuery.data])
 
   const handleAddShot = () => {
+    if (!sceneId) return
     const nextShotNumber = (shotsQuery.data?.length || 0) + 1
 
     mutations.insertShot.mutate({
@@ -52,6 +53,7 @@ export function ShotTable({ component }: ShotTableProps) {
   }
 
   const handleDeleteShot = (id: string) => {
+    if (!sceneId) return
     if (confirm('Delete this shot?')) {
       mutations.deleteShot.mutate({ id, sceneId })
     }
