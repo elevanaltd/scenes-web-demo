@@ -73,6 +73,18 @@ export function Sidebar({
     }
   }, [selectedVideo?.id, scriptsQuery.isLoading, scriptsQuery.data?.length, scriptsQuery.error?.message])
 
+  React.useEffect(() => {
+    console.log('[Sidebar] selectedScript changed:', selectedScript ? `${selectedScript.plain_text.substring(0, 30)} (${selectedScript.id})` : 'none')
+    if (selectedScript?.id) {
+      console.log('[Sidebar] Components query for script:', {
+        scriptId: selectedScript.id,
+        componentsLoading: componentsQuery.isLoading,
+        componentsCount: componentsQuery.data?.length ?? 0,
+        componentsError: componentsQuery.error?.message,
+      })
+    }
+  }, [selectedScript?.id, componentsQuery.isLoading, componentsQuery.data?.length, componentsQuery.error?.message])
+
   // Track which projects are expanded
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
 
