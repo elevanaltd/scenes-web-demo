@@ -114,7 +114,15 @@ export function Sidebar({
               <div className="project-row">
                 <button
                   className="expand-toggle"
-                  onClick={() => toggleProjectExpanded(project.id)}
+                  onClick={() => {
+                    console.log('[Sidebar] Clicked expand arrow for project:', project.title)
+                    // If expanding, also select the project so videos load
+                    if (!expandedProjects.has(project.id)) {
+                      console.log('[Sidebar] Auto-selecting project on expand')
+                      onSelectProject(project)
+                    }
+                    toggleProjectExpanded(project.id)
+                  }}
                   title={expandedProjects.has(project.id) ? 'Collapse' : 'Expand'}
                 >
                   {expandedProjects.has(project.id) ? '▼' : '▶'}
