@@ -43,6 +43,14 @@ export function Sidebar({
 
   // Debug logging
   React.useEffect(() => {
+    console.log('[Sidebar] Projects loaded:', {
+      projectsLoading: projectsQuery.isLoading,
+      projectsCount: projectsQuery.data?.length ?? 0,
+      projectsError: projectsQuery.error?.message,
+    })
+  }, [projectsQuery.isLoading, projectsQuery.data?.length, projectsQuery.error?.message])
+
+  React.useEffect(() => {
     if (selectedProject?.eav_code) {
       console.log('[Sidebar] Videos query for project:', {
         eav_code: selectedProject.eav_code,
@@ -51,7 +59,7 @@ export function Sidebar({
         videosError: videosQuery.error?.message,
       })
     }
-  }, [selectedProject?.eav_code, videosQuery.isLoading, videosQuery.data, videosQuery.error])
+  }, [selectedProject?.eav_code, videosQuery.isLoading, videosQuery.data?.length, videosQuery.error?.message])
 
   // Track which projects are expanded
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
@@ -103,19 +111,28 @@ export function Sidebar({
 
               {/* Nested Videos (shown when project expanded) */}
               {expandedProjects.has(project.id) && selectedProject?.id === project.id && (
-                <div className="videos-container">
-                  {videosQuery.isLoading && <div className="sidebar-loading">Loading videos...</div>}
+                <div className="videos-container" data-testid={`videos-container-${project.id}`}>
+                  {videosQuery.isLoading && (
+                    <div className="sidebar-loading" data-testid={`videos-loading-${project.id}`}>
+                      Loading videos...
+                    </div>
+                  )}
                   {videosQuery.error && (
-                    <div className="sidebar-error">Error loading videos</div>
+                    <div className="sidebar-error" data-testid={`videos-error-${project.id}`}>
+                      Error: {videosQuery.error?.message || 'Unknown error loading videos'}
+                    </div>
                   )}
-                  {videosQuery.data && videosQuery.data.length === 0 && (
-                    <div className="sidebar-loading">No videos</div>
+                  {!videosQuery.isLoading && !videosQuery.error && videosQuery.data && videosQuery.data.length === 0 && (
+                    <div className="sidebar-loading" data-testid={`videos-empty-${project.id}`}>
+                      No videos
+                    </div>
                   )}
-                  {videosQuery.data?.map((video) => (
+                  {videosQuery.data && videosQuery.data.length > 0 && videosQuery.data.map((video) => (
                     <button
                       key={video.id}
                       className={`sidebar-item video-item ${selectedVideo?.id === video.id ? 'active' : ''}`}
                       onClick={() => onSelectVideo(video)}
+                      data-testid={`video-button-${video.id}`}
                     >
                       <span className="sidebar-item-title">{video.title}</span>
                       <span className="sidebar-item-code">{video.eav_code}</span>
