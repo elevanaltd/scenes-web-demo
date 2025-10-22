@@ -27,6 +27,10 @@ export function ShotTable({ component }: ShotTableProps) {
   const dropdownsQuery = useDropdownOptions()
   const mutations = useShotMutations()
 
+  // Optimistic UI state for props field - maps shot.id to optimistic props value
+  // Allows instant typing feedback while mutation saves in background
+  const [optimisticProps, setOptimisticProps] = React.useState<Record<string, string | null>>({})
+
   // Group dropdown options by field for easy access
   const dropdownMap = React.useMemo(() => {
     const map: Record<string, DropdownOption[]> = {}
@@ -58,6 +62,37 @@ export function ShotTable({ component }: ShotTableProps) {
       mutations.deleteShot.mutate({ id, sceneId })
     }
   }
+
+  const handlePropsChange = (shotId: string, newValue: string) => {
+    // Update optimistic state immediately for instant UI feedback
+    const propsValue = newValue || null
+    setOptimisticProps(prev => ({
+      ...prev,
+      [shotId]: propsValue,
+    }))
+
+    // Fire mutation in background - will rollback if fails
+    mutations.updateShot.mutate(
+      { id: shotId, props: propsValue },
+      {
+        onError: () => {
+          // Rollback optimistic state on error
+          setOptimisticProps(prev => {
+            const next = { ...prev }
+            delete next[shotId]
+            return next
+          })
+        },
+      }
+    )
+  }
+
+  // Clear optimistic state when shots refetch (successful mutation)
+  React.useEffect(() => {
+    if (!mutations.updateShot.isPending) {
+      setOptimisticProps({})
+    }
+  }, [mutations.updateShot.isPending])
 
   if (sceneQuery.isLoading || shotsQuery.isLoading) {
     return <div className="shot-table-loading">Loading shots...</div>
@@ -231,15 +266,11 @@ export function ShotTable({ component }: ShotTableProps) {
                   <td className="col-props">
                     <input
                       type="text"
-                      value={shot.props || ''}
-                      onChange={(e) =>
-                        mutations.updateShot.mutate({
-                          id: shot.id,
-                          props: (e.target.value || null) as string | null,
-                        })
-                      }
+                      value={optimisticProps[shot.id] !== undefined ? optimisticProps[shot.id] || '' : shot.props || ''}
+                      onChange={(e) => handlePropsChange(shot.id, e.target.value)}
                       placeholder="Props"
                       className="form-control"
+                      title="Edit props - changes save automatically"
                     />
                   </td>
                   <td className="col-actions">
