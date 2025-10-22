@@ -2,4 +2,10 @@ import { createBrowserClient } from '@elevanaltd/shared-lib/client'
 
 // North Star I6: App-specific state tables
 // This app reads shared script_components and maintains independent shots/scene_planning_state
-export const supabase = createBrowserClient()
+const _supabase = createBrowserClient()
+
+export function getSupabaseClient() {
+  return _supabase
+}
+
+export const supabase = _supabase
