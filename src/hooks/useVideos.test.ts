@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 import { useVideos } from './useVideos'
 import * as supabaseLib from '../lib/supabase'
+import * as authHook from './useAuth'
 
 const mockSupabase = {
   from: vi.fn(),
@@ -11,6 +12,15 @@ const mockSupabase = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 vi.spyOn(supabaseLib, 'getSupabaseClient').mockReturnValue(mockSupabase as any)
+
+// Mock useAuth to return a logged-in user
+vi.spyOn(authHook, 'useAuth').mockReturnValue({
+  user: { id: 'test-user-id', email: 'test@example.com' },
+  profile: null,
+  isLoading: false,
+  isError: false,
+  logout: vi.fn(),
+})
 
 const wrapper = ({ children }: { children: React.ReactNode }) => {
   const queryClient = new QueryClient({
@@ -45,11 +55,16 @@ describe('useVideos', () => {
 
     const { result } = renderHook(() => useVideos('p1'), { wrapper })
 
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
+    await waitFor(
+      () => {
+        expect(result.current.isLoading).toBe(false)
+      },
+      { timeout: 3000 }
+    )
 
     expect(result.current.data).toEqual(mockVideos)
+    expect(mockSelect).toHaveBeenCalledWith('id, title, eav_code, created_at')
+    expect(mockEq).toHaveBeenCalledWith('eav_code', 'p1')
   })
 
   it('should skip query when project_id is undefined', async () => {
