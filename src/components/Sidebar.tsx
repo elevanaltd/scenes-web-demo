@@ -182,17 +182,23 @@ export function Sidebar({
       {/* Scripts Section */}
       {selectedVideo && (
         <div className="sidebar-section">
-          <h3 className="sidebar-title">Scripts</h3>
+          <h3 className="sidebar-title">Scripts ({scriptsQuery.data?.length ?? 0})</h3>
           {scriptsQuery.isLoading && <div className="sidebar-loading">Loading scripts...</div>}
           {scriptsQuery.error && (
-            <div className="sidebar-error">Error loading scripts</div>
+            <div className="sidebar-error">Error loading scripts: {scriptsQuery.error?.message}</div>
+          )}
+          {!scriptsQuery.isLoading && !scriptsQuery.error && scriptsQuery.data && scriptsQuery.data.length === 0 && (
+            <div className="sidebar-loading">No scripts</div>
           )}
           <div className="sidebar-list">
             {scriptsQuery.data?.map((script) => (
               <button
                 key={script.id}
                 className={`sidebar-item ${selectedScript?.id === script.id ? 'active' : ''}`}
-                onClick={() => onSelectScript(script)}
+                onClick={() => {
+                  console.log('[Sidebar] Clicked script:', script.plain_text.substring(0, 30))
+                  onSelectScript(script)
+                }}
               >
                 <span className="sidebar-item-title">
                   {script.plain_text.substring(0, 30)}...
