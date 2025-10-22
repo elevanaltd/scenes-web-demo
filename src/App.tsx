@@ -42,20 +42,21 @@ export function ScenesWorkspace() {
   }
 
   return (
-    <div className="app-layout">
-      <ScenesNavigationContainer
-        onComponentSelected={(componentId) => {
-          const component = componentsQuery.data?.find(c => c.id === componentId)
-          if (component) {
-            nav.setSelectedComponent(component)
-          }
-        }}
-      />
-      <div className="main-content">
-        <div className="header">
-          <h1>Scene Planning & Shot Lists</h1>
-        </div>
-        <div className="content-wrapper">
+    <>
+      <div className="header">
+        <h1>Scene Planning & Shot Lists</h1>
+      </div>
+      <div className="app-layout">
+        <ScenesNavigationContainer
+          onComponentSelected={(componentId) => {
+            const component = componentsQuery.data?.find(c => c.id === componentId)
+            if (component) {
+              nav.setSelectedComponent(component)
+            }
+          }}
+        />
+        <div className="main-content">
+          <div className="content-wrapper">
           <div className="content-scroll">
             {!nav.selectedScript ? (
               <>
@@ -120,10 +121,11 @@ export function ScenesWorkspace() {
                 ))}
               </>
             )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
