@@ -62,6 +62,7 @@ export function Sidebar({
   }, [selectedProject?.eav_code, videosQuery.isLoading, videosQuery.data?.length, videosQuery.error?.message])
 
   React.useEffect(() => {
+    console.log('[Sidebar] selectedVideo changed:', selectedVideo ? `${selectedVideo.title} (${selectedVideo.id})` : 'none')
     if (selectedVideo?.id) {
       console.log('[Sidebar] Scripts query for video:', {
         videoId: selectedVideo.id,
