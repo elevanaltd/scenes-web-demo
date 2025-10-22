@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { NavigationProvider } from '@elevanaltd/shared-lib'
+import { NavigationProvider } from '../contexts/NavigationContext'
 import { ScenesNavigationContainer } from './ScenesNavigationContainer'
 
 // Mock the hooks
@@ -33,6 +33,14 @@ vi.mock('../hooks/useVideos', () => ({
       error: null,
     }
   },
+}))
+
+vi.mock('../hooks/useScripts', () => ({
+  useScripts: () => ({
+    data: [],
+    isLoading: false,
+    error: null,
+  }),
 }))
 
 describe('ScenesNavigationContainer', () => {

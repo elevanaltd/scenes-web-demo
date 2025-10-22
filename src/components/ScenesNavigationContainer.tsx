@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { HierarchicalNavigationSidebar, type Video } from '@elevanaltd/ui'
 import { useProjects } from '../hooks/useProjects'
 import { useVideos } from '../hooks/useVideos'
-import { useNavigation } from '@elevanaltd/shared-lib'
+import { useScripts } from '../hooks/useScripts'
+import { useNavigation } from '../contexts/NavigationContext'
 
 interface ScenesNavigationContainerProps {
   onComponentSelected?: (componentId: string) => void
@@ -20,11 +21,25 @@ interface ScenesNavigationContainerProps {
  */
 export function ScenesNavigationContainer({ onComponentSelected: _onComponentSelected }: ScenesNavigationContainerProps) {
   const projectsQuery = useProjects()
-  const { selectedProject } = useNavigation()
+  const { selectedProject, selectedVideo, setSelectedScript } = useNavigation()
   const videosQuery = useVideos(selectedProject?.eav_code)
+  const scriptsQuery = useScripts(selectedVideo?.id)
 
   // Track expanded projects locally
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
+
+  // When video is selected, automatically load and set its script
+  // This enables useScriptComponents(selectedScript.id) to fetch components
+  useEffect(() => {
+    if (selectedVideo?.id && scriptsQuery.data && scriptsQuery.data.length > 0) {
+      // North Star I6: One script per video (unique constraint)
+      const script = scriptsQuery.data[0]
+      setSelectedScript(script)
+    } else if (!selectedVideo?.id) {
+      // Clear script when video is deselected
+      setSelectedScript(undefined)
+    }
+  }, [selectedVideo?.id, scriptsQuery.data, setSelectedScript])
 
   const handleProjectExpand = (projectId: string) => {
     const newExpanded = new Set(expandedProjects)
