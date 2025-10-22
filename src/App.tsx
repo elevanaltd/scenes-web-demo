@@ -1,12 +1,14 @@
 import React, { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { NavigationProvider as SharedNavigationProvider } from '@elevanaltd/shared-lib'
+import '@elevanaltd/ui/dist/index.css'
 import { AuthProvider } from './contexts/AuthContext'
 import { NavigationProvider } from './contexts/NavigationContext'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { PrivateRoute } from './components/auth/PrivateRoute'
 import { Login } from './components/auth/Login'
-import { Sidebar } from './components/Sidebar'
+import { ScenesNavigationContainer } from './components/ScenesNavigationContainer'
 import { ShotTable } from './components/ShotTable'
 import { useNavigation } from './contexts/NavigationContext'
 import { useScriptComponents } from './hooks/useScriptComponents'
@@ -42,16 +44,16 @@ function ScenesWorkspace() {
 
   return (
     <div className="app-layout">
-      <Sidebar
-        selectedProject={nav.selectedProject}
-        selectedVideo={nav.selectedVideo}
-        selectedScript={nav.selectedScript}
-        selectedComponent={nav.selectedComponent}
-        onSelectProject={nav.setSelectedProject}
-        onSelectVideo={nav.setSelectedVideo}
-        onSelectScript={nav.setSelectedScript}
-        onSelectComponent={nav.setSelectedComponent}
-      />
+      <SharedNavigationProvider>
+        <ScenesNavigationContainer
+          onComponentSelected={(componentId) => {
+            const component = componentsQuery.data?.find(c => c.id === componentId)
+            if (component) {
+              nav.setSelectedComponent(component)
+            }
+          }}
+        />
+      </SharedNavigationProvider>
       <div className="main-content">
         <div className="header">
           <h1>Scene Planning & Shot Lists</h1>
