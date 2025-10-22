@@ -36,6 +36,22 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 describe('Sidebar', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Setup default mocks for all hooks
+    mockUseVideos.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    })
+    mockUseScripts.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    })
+    mockUseScriptComponents.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    })
   })
 
   it('should render projects section with loading state', () => {

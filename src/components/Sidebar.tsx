@@ -41,6 +41,18 @@ export function Sidebar({
   const scriptsQuery = useScripts(selectedVideo?.id)
   const componentsQuery = useScriptComponents(selectedScript?.id)
 
+  // Debug logging
+  React.useEffect(() => {
+    if (selectedProject?.eav_code) {
+      console.log('[Sidebar] Videos query for project:', {
+        eav_code: selectedProject.eav_code,
+        videosLoading: videosQuery.isLoading,
+        videosCount: videosQuery.data?.length ?? 0,
+        videosError: videosQuery.error?.message,
+      })
+    }
+  }, [selectedProject?.eav_code, videosQuery.isLoading, videosQuery.data, videosQuery.error])
+
   // Track which projects are expanded
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
     selectedProject ? new Set([selectedProject.id]) : new Set()
