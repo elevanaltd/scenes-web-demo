@@ -62,9 +62,14 @@ export function Sidebar({
   }, [selectedProject?.eav_code, videosQuery.isLoading, videosQuery.data?.length, videosQuery.error?.message])
 
   // Track which projects are expanded
-  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
-    selectedProject ? new Set([selectedProject.id]) : new Set()
-  )
+  // Automatically expand when a project is selected
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
+
+  React.useEffect(() => {
+    if (selectedProject) {
+      setExpandedProjects(new Set([selectedProject.id]))
+    }
+  }, [selectedProject?.id])
 
   const toggleProjectExpanded = (projectId: string) => {
     const newExpanded = new Set(expandedProjects)
