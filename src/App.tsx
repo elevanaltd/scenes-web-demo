@@ -24,7 +24,7 @@ const queryClient = new QueryClient({
 })
 
 // Workspace with navigation
-function ScenesWorkspace() {
+export function ScenesWorkspace() {
   const nav = useNavigation()
   const componentsQuery = useScriptComponents(nav.selectedScript?.id)
   const [expandedComponents, setExpandedComponents] = useState<Set<string>>(new Set())
@@ -55,69 +55,72 @@ function ScenesWorkspace() {
         <div className="header">
           <h1>Scene Planning & Shot Lists</h1>
         </div>
-        <div style={{ padding: '20px', flex: 1, overflow: 'auto' }}>
-          {!nav.selectedScript ? (
-            <>
-              <div className="error-message">
-                ℹ️ <strong>Select a Script</strong> - Choose a project, video, and script to view all components and shots
-              </div>
-            </>
-          ) : (
-            <>
-              {componentsQuery.isLoading && <div className="error-message">Loading components...</div>}
-              {componentsQuery.error && (
-                <div className="error-message" style={{ background: '#fee', borderColor: '#fcc', color: '#c33' }}>
-                  Error loading components: {componentsQuery.error?.message}
+        <div className="content-wrapper">
+          <div className="content-scroll">
+            {!nav.selectedScript ? (
+              <>
+                <div className="error-message">
+                  ℹ️ <strong>Select a Script</strong> - Choose a project, video, and script to view all components and shots
                 </div>
-              )}
-              {componentsQuery.data && componentsQuery.data.length === 0 && (
-                <div className="error-message">No components found for this script</div>
-              )}
-              {componentsQuery.data && componentsQuery.data.map((component: ScriptComponent) => (
-                <div
-                  key={component.id}
-                  style={{
-                    marginBottom: '20px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <button
-                    onClick={() => toggleComponent(component.id)}
+              </>
+            ) : (
+              <>
+                {componentsQuery.isLoading && <div className="error-message">Loading components...</div>}
+                {componentsQuery.error && (
+                  <div className="error-message" style={{ background: '#fee', borderColor: '#fcc', color: '#c33' }}>
+                    Error loading components: {componentsQuery.error?.message}
+                  </div>
+                )}
+                {componentsQuery.data && componentsQuery.data.length === 0 && (
+                  <div className="error-message">No components found for this script</div>
+                )}
+                {componentsQuery.data && componentsQuery.data.map((component: ScriptComponent) => (
+                  <div
+                    key={component.id}
                     style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      background: '#f5f5f5',
-                      border: 'none',
-                      borderBottom: expandedComponents.has(component.id) ? '1px solid #ddd' : 'none',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      fontWeight: 500,
-                      fontSize: '14px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
+                      marginBottom: '20px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      overflow: 'hidden',
+                      background: 'white',
                     }}
                   >
-                    <span>Scene {component.component_number}: {component.content.substring(0, 50)}...</span>
-                    <span>{expandedComponents.has(component.id) ? '▼' : '▶'}</span>
-                  </button>
-                  {expandedComponents.has(component.id) && (
-                    <div style={{ padding: '16px' }}>
-                      <div style={{ marginBottom: '16px' }}>
-                        <h3 style={{ margin: '0 0 8px 0' }}>{`Scene ${component.component_number}`}</h3>
-                        <p style={{ margin: '0', color: '#666', lineHeight: '1.6', fontSize: '14px' }}>
-                          {component.content}
-                        </p>
+                    <button
+                      onClick={() => toggleComponent(component.id)}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        background: '#f5f5f5',
+                        border: 'none',
+                        borderBottom: expandedComponents.has(component.id) ? '1px solid #ddd' : 'none',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        fontWeight: 500,
+                        fontSize: '14px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <span>Scene {component.component_number}: {component.content.substring(0, 50)}...</span>
+                      <span>{expandedComponents.has(component.id) ? '▼' : '▶'}</span>
+                    </button>
+                    {expandedComponents.has(component.id) && (
+                      <div style={{ padding: '16px' }}>
+                        <div style={{ marginBottom: '16px' }}>
+                          <h3 style={{ margin: '0 0 8px 0' }}>{`Scene ${component.component_number}`}</h3>
+                          <p style={{ margin: '0', color: '#666', lineHeight: '1.6', fontSize: '14px' }}>
+                            {component.content}
+                          </p>
+                        </div>
+                        <ShotTable component={component} />
                       </div>
-                      <ShotTable component={component} />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </>
-          )}
+                    )}
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
