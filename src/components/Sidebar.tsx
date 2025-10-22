@@ -61,24 +61,41 @@ export function Sidebar({
     }
   }, [selectedProject?.eav_code, videosQuery.isLoading, videosQuery.data?.length, videosQuery.error?.message])
 
+  React.useEffect(() => {
+    if (selectedVideo?.id) {
+      console.log('[Sidebar] Scripts query for video:', {
+        videoId: selectedVideo.id,
+        scriptsLoading: scriptsQuery.isLoading,
+        scriptsCount: scriptsQuery.data?.length ?? 0,
+        scriptsError: scriptsQuery.error?.message,
+      })
+    }
+  }, [selectedVideo?.id, scriptsQuery.isLoading, scriptsQuery.data?.length, scriptsQuery.error?.message])
+
   // Track which projects are expanded
-  // Automatically expand when a project is selected
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
 
+  // Auto-expand selected project, but allow manual toggle to override
   React.useEffect(() => {
+    console.log('[Sidebar] selectedProject changed:', selectedProject ? `${selectedProject.title} (${selectedProject.id})` : 'none')
     if (selectedProject) {
-      setExpandedProjects(new Set([selectedProject.id]))
+      console.log('[Sidebar] Expanding project:', selectedProject.id)
+      // Ensure selected project is expanded (but don't collapse others)
+      setExpandedProjects(prev => new Set([...prev, selectedProject.id]))
     }
   }, [selectedProject?.id])
 
   const toggleProjectExpanded = (projectId: string) => {
-    const newExpanded = new Set(expandedProjects)
-    if (newExpanded.has(projectId)) {
-      newExpanded.delete(projectId)
-    } else {
-      newExpanded.add(projectId)
-    }
-    setExpandedProjects(newExpanded)
+    console.log('[Sidebar] Toggle expand for project:', projectId)
+    setExpandedProjects(prev => {
+      const newExpanded = new Set(prev)
+      if (newExpanded.has(projectId)) {
+        newExpanded.delete(projectId)
+      } else {
+        newExpanded.add(projectId)
+      }
+      return newExpanded
+    })
   }
 
   return (
@@ -105,6 +122,7 @@ export function Sidebar({
                 <button
                   className={`sidebar-item project-item ${selectedProject?.id === project.id ? 'active' : ''}`}
                   onClick={() => {
+                    console.log('[Sidebar] Clicked project:', project.title)
                     onSelectProject(project)
                     toggleProjectExpanded(project.id)
                   }}
@@ -136,7 +154,10 @@ export function Sidebar({
                     <button
                       key={video.id}
                       className={`sidebar-item video-item ${selectedVideo?.id === video.id ? 'active' : ''}`}
-                      onClick={() => onSelectVideo(video)}
+                      onClick={() => {
+                        console.log('[Sidebar] Clicked video:', video.title)
+                        onSelectVideo(video)
+                      }}
                       data-testid={`video-button-${video.id}`}
                     >
                       <span className="sidebar-item-title">{video.title}</span>
