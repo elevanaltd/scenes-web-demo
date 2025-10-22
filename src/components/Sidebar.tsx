@@ -120,7 +120,7 @@ export function Sidebar({
       {selectedVideo && (
         <div className="sidebar-section">
           <h3 className="sidebar-title">Scripts</h3>
-          {scriptsQuery.isLoading && <div className="sidebar-loading">Loading...</div>}
+          {scriptsQuery.isLoading && <div className="sidebar-loading">Loading scripts...</div>}
           {scriptsQuery.error && (
             <div className="sidebar-error">Error loading scripts</div>
           )}
