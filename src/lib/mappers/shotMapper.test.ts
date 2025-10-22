@@ -29,7 +29,7 @@ describe('shotMapper', () => {
     expect(shot.status).toBe('not_started')
   })
 
-  it('should convert null fields to undefined', () => {
+  it('should convert null fields to null', () => {
     const row = {
       id: 'shot-1',
       scene_id: 'scene-1',
@@ -50,8 +50,8 @@ describe('shotMapper', () => {
 
     const shot = mapShotRowToShot(row)
 
-    expect(shot.status).toBeUndefined()
-    expect(shot.location).toBeUndefined()
-    expect(shot.int_ext).toBeUndefined()
+    expect(shot.status).toBeNull()
+    expect(shot.location).toBeNull()
+    expect(shot.int_ext).toBeNull()
   })
 })

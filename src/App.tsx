@@ -7,6 +7,7 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { PrivateRoute } from './components/auth/PrivateRoute'
 import { Login } from './components/auth/Login'
 import { Sidebar } from './components/Sidebar'
+import { ShotTable } from './components/ShotTable'
 import { useNavigation } from './contexts/NavigationContext'
 
 const queryClient = new QueryClient({
@@ -48,14 +49,13 @@ function ScenesWorkspace() {
             </>
           ) : (
             <>
-              <h2>{`Component ${nav.selectedComponent.component_number}`}</h2>
-              <p style={{ marginTop: '8px', color: '#666', lineHeight: '1.6' }}>
-                {nav.selectedComponent.content}
-              </p>
-              <div style={{ marginTop: '20px' }}>
-                <h3>Shots for this component</h3>
-                <p style={{ color: '#999', fontSize: '13px' }}>Coming soon: Shot table</p>
+              <div style={{ marginBottom: '20px' }}>
+                <h2 style={{ margin: '0 0 8px 0' }}>{`Component ${nav.selectedComponent.component_number}`}</h2>
+                <p style={{ margin: '0', color: '#666', lineHeight: '1.6', fontSize: '14px' }}>
+                  {nav.selectedComponent.content}
+                </p>
               </div>
+              <ShotTable component={nav.selectedComponent} />
             </>
           )}
         </div>

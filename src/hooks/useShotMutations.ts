@@ -5,16 +5,16 @@ import type { Shot } from '../types'
 interface InsertShotInput {
   scene_id: string
   shot_number: number
-  status?: string
-  location?: string
-  subject?: string
-  action?: string
-  shot_type?: string
-  int_ext?: 'interior' | 'exterior'
-  requires_actor?: boolean
-  props?: string
-  variant?: string
-  plot_notes?: string
+  status?: string | null
+  location?: string | null
+  subject?: string | null
+  action?: string | null
+  shot_type?: string | null
+  int_ext?: 'interior' | 'exterior' | null
+  requires_actor?: boolean | null
+  props?: string | null
+  variant?: string | null
+  plot_notes?: string | null
 }
 
 interface UpdateShotInput extends Partial<InsertShotInput> {

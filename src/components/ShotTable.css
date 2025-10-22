@@ -1,0 +1,169 @@
+.shot-table-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: white;
+  border-radius: 4px;
+}
+
+.shot-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ddd;
+}
+
+.shot-table-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.shot-table-loading,
+.shot-table-error {
+  padding: 24px;
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+}
+
+.shot-table-error {
+  background: #fee;
+  color: #c33;
+  border-radius: 4px;
+}
+
+.shot-table-empty {
+  padding: 32px;
+  text-align: center;
+  font-size: 14px;
+  color: #999;
+  background: #f9f9f9;
+  border-radius: 4px;
+  border: 1px dashed #ddd;
+}
+
+.shot-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.shot-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  background: white;
+}
+
+.shot-table th {
+  background: #f5f5f5;
+  padding: 8px 6px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.shot-table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.shot-table tbody tr:hover {
+  background: #f9f9f9;
+}
+
+.shot-table tbody tr.editing {
+  background: #f0f0f0;
+}
+
+/* Column widths */
+.col-number {
+  width: 40px;
+  text-align: center;
+}
+
+.col-status {
+  width: 100px;
+}
+
+.col-location {
+  width: 120px;
+}
+
+.col-subject {
+  width: 110px;
+}
+
+.col-action {
+  width: 110px;
+}
+
+.col-type {
+  width: 100px;
+}
+
+.col-intext {
+  width: 80px;
+}
+
+.col-actor {
+  width: 60px;
+  text-align: center;
+}
+
+.col-props {
+  width: 120px;
+}
+
+.col-actions {
+  width: 70px;
+  text-align: center;
+}
+
+/* Form controls in table */
+.shot-table select,
+.shot-table input[type='text'] {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.shot-table select:focus,
+.shot-table input[type='text']:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.shot-table input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* Buttons in table */
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
