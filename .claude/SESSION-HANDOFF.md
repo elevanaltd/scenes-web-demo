@@ -1,47 +1,33 @@
 # Scenes-Web Demo Session Handoff
 
-**Date:** 2025-10-22
-**Status:** Phase 2 Delivery - Navigation working, Shot table implemented but videos dropdown empty
+**Date:** 2025-10-22 (Updated: Later session)
+**Status:** ✅ Phase 2 Complete - Full navigation working with collapsible component cards
 **Repository:** `/Volumes/HestAI-Projects/eav-ops/eav-app-demos/scenes-web-demo-1/`
 
 ## Current State
 
-### ✅ Completed
-- Sidebar navigation hierarchy (Projects → Videos → Scripts → Components)
-- Projects filtered to active phases only (Pre-Production, In Production, Post-Production)
-- Navigation state management (NavigationContext)
-- useScene hook (auto-creates scene_planning_state records)
-- Shot table UI with inline editing
-- All 54 tests passing
-- Zero TypeScript errors
-- **DEBUG LOGGING ADDED**: useVideos hook now logs query execution and responses
+### ✅ Completed Features
+- **Sidebar Navigation:** Projects → Videos → Scripts fully working
+  - Expand arrow works independently (auto-selects project)
+  - Project click expands and selects project
+  - Videos load when project selected
+  - Scripts load when video selected
+- **Main Content:** All components for selected script displayed as collapsible cards
+  - Each component shows as expandable "Scene N" card with preview
+  - Click card header to toggle expand/collapse
+  - When expanded: shows full component content + shot table
+  - Shot table UI with inline editing
+- **Auth Integration:** useVideos hook checks auth before querying
+- **All 54 tests passing**
+- **Zero TypeScript errors**
+- **Navigation state management** (NavigationContext) handling all selections
 
-### 🔍 Investigation Completed
-**Database Status:** ✅ All data verified
-- 292 videos in database
-- Videos linked to projects via eav_code (EAV011 has 6, EAV002 has 12, etc.)
-- RLS policy "videos_select_unified" correctly allows admin/employee access
-- Projects exist with matching eav_codes
-
-**Code Status:** ✅ Implementation correct
-- useVideos hook structure is correct (filters by eav_code, enabled when eav_code present)
-- Sidebar rendering logic is correct (shows videos when project selected AND expanded)
-- Navigation state management working properly
-- All tests pass (54/54)
-
-### 🟡 Current Issue
-**Videos dropdown not appearing in browser** - likely runtime issue requiring browser testing
-
-**Most Likely Causes (in order):**
-1. Auth not fully initialized when app loads (session timing issue)
-2. Browser console showing a silent error that's being caught
-3. Query response is malformed or empty despite database check
-4. VITE environment variables not being picked up by browser bundle
-
-**Not The Issue:**
-- ❌ Database missing videos (verified: 292 exist)
-- ❌ RLS blocking access (policy allows admin/employee queries)
-- ❌ Code logic error (tests verify correct behavior, tests pass)
+### 🔧 Issues Fixed This Session
+1. **Videos not loading** - Added auth check to useVideos hook (query was running before auth ready)
+2. **Expand arrow didn't work** - Made expand arrow auto-select project to trigger video loading
+3. **Scripts section visibility** - Was rendering below fold in scrollable sidebar (user needed to scroll)
+4. **Single component view** - Changed to show ALL components as collapsible cards
+5. **No component auto-selection** - Now loads all components when script selected
 
 ## Quick Start for Next Session
 
@@ -49,13 +35,24 @@
 # Navigate to project
 cd /Volumes/HestAI-Projects/eav-ops/eav-app-demos/scenes-web-demo-1
 
-# Verify dev server is running
+# Install dependencies (if needed)
+npm install
+
+# Start dev server
 npm run dev  # Port 3002
 
-# In browser console, check:
-# 1. Network tab - look for `/rest/v1/videos` request
-# 2. Console - filter for "useVideos" or "Sidebar State"
-# 3. Check if request returns 401/403 (auth/RLS issue)
+# Run tests (if making changes)
+npm test
+
+# Test workflow in browser:
+# 1. Go to http://localhost:3002
+# 2. Login with: shaun.buswell@elevana.com
+# 3. Click expand arrow on a project
+# 4. Click on a video
+# 5. Scroll down sidebar to find Scripts section
+# 6. Click a script
+# 7. Main area shows collapsible Scene cards
+# 8. Click Scene header to expand/collapse
 ```
 
 ## Architecture Overview
@@ -208,47 +205,74 @@ SELECT get_user_role() as role;
    - Code review of architecture
    - Production readiness assessment
 
-## Recent Changes (Last Session)
+## Recent Changes (This Session)
 
 ```
-commit e6d3470 (Current Session - 2025-10-22)
-test: Add debug logging to useVideos hook and Sidebar component for troubleshooting
-- Enhanced useVideos with console.log to trace query execution and responses
-- Added Sidebar effect to log videos loading state when project selected
-- Fixed Sidebar.test.tsx to mock all hooks in beforeEach
-- All 54 tests passing
+commit 4de67dd
+feat: Show all components for selected script as collapsible cards
+- Changed main content to show ALL components instead of single component
+- Added collapsible card UI for each component
+- Each component has expand/collapse toggle
+- Shot table displays when component expanded
 
-commit ef3722c (Previous Session)
-refactor: Remove debug logging from Sidebar and useScripts
+commit 9075a17
+test: Add selectedScript and Components query logging
+
+commit d4e6938
+test: Add selectedVideo change logging
+
+commit d3ba07c
+test: Improve Scripts section visibility and debugging
+
+commit c2169bc
+fix: Make expand arrow also select project so videos load
+
+commit c63147e
+fix: Auto-expand projects when selected in sidebar
+
+commit 4a7d703
+fix: Add auth check to useVideos hook to prevent premature queries
+
+commit 2972337
+test: Add visual error indicators for videos query debugging
 ```
 
-## Session Summary (2025-10-22)
+## Session Summary (2025-10-22 - Complete Session)
 
-### Investigation Results
-- ✅ Verified 292 videos exist in database
-- ✅ Verified videos are linked to projects via eav_code
-- ✅ Verified RLS policy allows admin/employee access
-- ✅ Verified code implementation is correct (tests pass)
-- ✅ Added comprehensive debug logging to trace issue
-- ✅ Fixed Sidebar test setup for proper mock initialization
+### Root Causes Identified & Fixed
+1. **Videos not loading**
+   - Root cause: useVideos query running before auth initialized
+   - Fix: Added `useAuth()` check to useVideos, query only runs when both `projectEavCode && user` exist
+
+2. **Expand arrow not working**
+   - Root cause: Expand arrow only toggled expansion state, didn't select project (so videos query never ran)
+   - Fix: Made expand arrow auto-select project when expanding (so videos load)
+
+3. **Scripts not visible**
+   - Root cause: Scripts section rendered in scrollable sidebar at bottom (below initial viewport)
+   - Solution: User needs to scroll sidebar down to see Scripts section
+
+4. **Poor UX for scene planning**
+   - Root cause: Single component view required clicking each component individually
+   - Fix: Changed to load ALL components for script and display as collapsible cards
 
 ### Work Completed
-1. Database verification query (292 videos, distributed across projects)
-2. RLS policy analysis (videos_select_unified is correct)
-3. Code review of useVideos, Sidebar, NavigationContext
-4. Added console.log debugging to useVideos and Sidebar
-5. Fixed broken Sidebar.test.tsx beforeEach mock setup
-6. Updated SESSION-HANDOFF with detailed browser debugging steps
-7. All tests pass (54/54)
+1. ✅ Added auth check to useVideos hook (prevents premature queries)
+2. ✅ Made expand arrow smart (auto-selects project to trigger video loading)
+3. ✅ Fixed sidebar state management (proper expand/collapse handling)
+4. ✅ Added comprehensive debug logging throughout Sidebar
+5. ✅ Refactored main content to show all components as collapsible cards
+6. ✅ Updated component rendering (each scene shows preview before expanding)
+7. ✅ Fixed useVideos tests (mocked useAuth properly)
+8. ✅ All 54 tests passing
+9. ✅ Build clean (0 errors, 0 warnings)
+10. ✅ Updated SESSION-HANDOFF with current working state
 
-### Next Session Action Items
-User should follow the "Debugging Steps" section above to:
-1. Open browser console and check for logs when clicking projects
-2. Report any error messages shown
-3. Verify auth is ready before testing
-4. Check Network tab for API responses
-
-Based on console output, root cause will become clear.
+### Known Limitations
+- Scripts section appears at bottom of sidebar (requires scrolling to see)
+  - Future enhancement: Could split sidebar into tabs or move Scripts/Components to separate panel
+- Component preview truncates at 50 chars (intentional for UI)
+- Debug logging still present in code (can remove when moving to production)
 
 
 ## Related Documentation
@@ -261,10 +285,33 @@ Based on console output, root cause will become clear.
 ## Git Status
 
 Branch: master
-Last commit: ef3722c (refactor: Remove debug logging)
+Last commit: 4de67dd (feat: Show all components for selected script as collapsible cards)
 Tests: 54/54 passing
 Build: ✅ Clean (0 errors, 0 warnings)
+TypeScript: ✅ No errors
+
+## Next Steps for Future Development
+
+### Phase 3 - Production Hardening
+1. **Remove debug logging** from Sidebar.tsx when going to production
+2. **Code review** of new App.tsx component rendering logic
+3. **UX improvements:**
+   - Consider sidebar reorganization (Scripts section visibility issue)
+   - Could use tabs or separate panel for Scripts/Components
+4. **Accessibility review** for collapsible cards
+5. **Performance testing** with large number of components
+
+### Future Enhancements
+- Keyboard navigation for sidebar (arrow keys)
+- Search/filter for projects, videos, scripts
+- Breadcrumb navigation in main area
+- Drag-and-drop reordering of components (if needed)
+- Component preview images or video thumbnails
 
 ---
 
-**Session Focus:** Get videos loading in dropdown by debugging useVideos query and fixing whatever is preventing data from appearing.
+**Current State:** ✅ **FULLY FUNCTIONAL TESTING UI**
+- All navigation working (Projects → Videos → Scripts → Components)
+- All components display in collapsible cards
+- Shot tables work with inline editing
+- Ready for user testing and feedback
