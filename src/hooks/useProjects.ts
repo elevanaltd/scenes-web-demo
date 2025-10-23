@@ -26,6 +26,7 @@ export function useProjects() {
       if (error) throw error
 
       // Remove videos property from result (we only needed it for filtering)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       return (data || []).map(({ videos, ...project }) => project) as Project[]
     },
   })

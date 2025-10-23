@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AutocompleteField } from './AutocompleteField'
 import { DropdownProvider } from '../contexts/DropdownContext'
@@ -91,7 +91,7 @@ describe('AutocompleteField', () => {
   describe('Selection & Auto-Save on Blur', () => {
     it('should call onChange with exact match when blurring after exact match', async () => {
       const user = userEvent.setup()
-      const { rerender } = renderWithDropdown(
+      renderWithDropdown(
         <AutocompleteField
           value={null}
           onChange={onChange}
@@ -150,7 +150,7 @@ describe('AutocompleteField', () => {
 
     it('should reset to previous value when no match found on fixed list (allowOther=false)', async () => {
       const user = userEvent.setup()
-      const { rerender } = renderWithDropdown(
+      renderWithDropdown(
         <AutocompleteField
           value="WS"
           onChange={onChange}
