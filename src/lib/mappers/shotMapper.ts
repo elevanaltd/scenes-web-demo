@@ -11,16 +11,16 @@ interface ShotRow {
   id: string
   scene_id: string
   shot_number: number
-  status?: string | null
-  location?: string | null
-  subject?: string | null
-  action?: string | null
   shot_type?: string | null
-  int_ext?: string | null
-  requires_actor?: boolean | null
-  props?: string | null
+  location_start_point?: string | null
+  location_other?: string | null
+  tracking_type?: string | null
+  subject?: string | null
+  subject_other?: string | null
   variant?: string | null
-  plot_notes?: string | null
+  action?: string | null
+  completed?: boolean | null
+  owner_user_id?: string | null
   created_at: string
   updated_at: string
 }
@@ -30,16 +30,16 @@ export function mapShotRowToShot(row: ShotRow): Shot {
     id: row.id,
     scene_id: row.scene_id,
     shot_number: row.shot_number,
-    status: row.status ?? null,
-    location: row.location ?? null,
-    subject: row.subject ?? null,
-    action: row.action ?? null,
     shot_type: row.shot_type ?? null,
-    int_ext: (row.int_ext as 'interior' | 'exterior' | null) ?? null,
-    requires_actor: row.requires_actor ?? null,
-    props: row.props ?? null,
+    location_start_point: row.location_start_point ?? null,
+    location_other: row.location_other ?? null,
+    tracking_type: row.tracking_type ?? null,
+    subject: row.subject ?? null,
+    subject_other: row.subject_other ?? null,
     variant: row.variant ?? null,
-    plot_notes: row.plot_notes ?? null,
+    action: row.action ?? null,
+    completed: row.completed ?? null,
+    owner_user_id: row.owner_user_id ?? null,
     created_at: row.created_at,
     updated_at: row.updated_at
   }

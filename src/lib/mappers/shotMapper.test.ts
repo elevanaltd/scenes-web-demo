@@ -7,16 +7,16 @@ describe('shotMapper', () => {
       id: 'shot-1',
       scene_id: 'scene-1',
       shot_number: 1,
-      status: 'not_started',
-      location: 'interior',
-      subject: 'building',
-      action: 'establishing',
-      shot_type: 'wide',
-      int_ext: 'interior',
-      requires_actor: false,
-      props: 'none',
-      variant: null,
-      plot_notes: null,
+      shot_type: 'WS',
+      location_start_point: 'Standard',
+      location_other: null,
+      tracking_type: 'Establishing',
+      subject: 'Standard',
+      subject_other: null,
+      variant: 'front door',
+      action: 'demo',
+      completed: false,
+      owner_user_id: 'user-123',
       created_at: '2025-01-01T00:00:00Z',
       updated_at: '2025-01-01T00:00:00Z'
     }
@@ -26,7 +26,8 @@ describe('shotMapper', () => {
     expect(shot.id).toBe('shot-1')
     expect(shot.scene_id).toBe('scene-1')
     expect(shot.shot_number).toBe(1)
-    expect(shot.status).toBe('not_started')
+    expect(shot.shot_type).toBe('WS')
+    expect(shot.location_start_point).toBe('Standard')
   })
 
   it('should convert null fields to null', () => {
@@ -34,24 +35,24 @@ describe('shotMapper', () => {
       id: 'shot-1',
       scene_id: 'scene-1',
       shot_number: 1,
-      status: undefined,
-      location: undefined,
-      subject: undefined,
-      action: undefined,
       shot_type: undefined,
-      int_ext: undefined,
-      requires_actor: undefined,
-      props: undefined,
+      location_start_point: undefined,
+      location_other: undefined,
+      tracking_type: undefined,
+      subject: undefined,
+      subject_other: undefined,
       variant: undefined,
-      plot_notes: undefined,
+      action: undefined,
+      completed: undefined,
+      owner_user_id: undefined,
       created_at: '2025-01-01T00:00:00Z',
       updated_at: '2025-01-01T00:00:00Z'
     }
 
     const shot = mapShotRowToShot(row)
 
-    expect(shot.status).toBeNull()
-    expect(shot.location).toBeNull()
-    expect(shot.int_ext).toBeNull()
+    expect(shot.shot_type).toBeNull()
+    expect(shot.location_start_point).toBeNull()
+    expect(shot.subject_other).toBeNull()
   })
 })

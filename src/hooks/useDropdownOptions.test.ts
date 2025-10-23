@@ -26,8 +26,8 @@ describe('useDropdownOptions', () => {
 
   it('should fetch dropdown options for specific field', async () => {
     const mockOptions = [
-      { id: '1', field_name: 'status' as const, option_value: 'not_started', option_label: 'Not Started', sort_order: 1, created_at: '2025-01-01' },
-      { id: '2', field_name: 'status' as const, option_value: 'in_progress', option_label: 'In Progress', sort_order: 2, created_at: '2025-01-01' },
+      { id: '1', field_name: 'shot_type' as const, option_value: 'WS', option_label: 'Wide Shot', sort_order: 1, created_at: '2025-01-01' },
+      { id: '2', field_name: 'shot_type' as const, option_value: 'CU', option_label: 'Close-Up', sort_order: 2, created_at: '2025-01-01' },
     ]
 
     const mockOrder = vi.fn().mockResolvedValue({
@@ -47,7 +47,7 @@ describe('useDropdownOptions', () => {
       select: mockSelect,
     })
 
-    const { result } = renderHook(() => useDropdownOptions('status'), { wrapper })
+    const { result } = renderHook(() => useDropdownOptions('shot_type'), { wrapper })
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
