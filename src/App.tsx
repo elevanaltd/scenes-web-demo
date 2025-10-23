@@ -10,6 +10,7 @@ import { Login } from './components/auth/Login'
 import { ScenesNavigationContainer } from './components/ScenesNavigationContainer'
 import { ShotTable } from './components/ShotTable'
 import { useNavigation } from './contexts/NavigationContext'
+import { useAuth } from './hooks/useAuth'
 import { useScriptComponents } from './hooks/useScriptComponents'
 import type { ScriptComponent } from './types'
 
@@ -26,6 +27,7 @@ const queryClient = new QueryClient({
 // Workspace with navigation
 export function ScenesWorkspace() {
   const nav = useNavigation()
+  const { logout } = useAuth()
   const componentsQuery = useScriptComponents(nav.selectedScript?.id)
   const [expandedComponents, setExpandedComponents] = useState<Set<string>>(new Set())
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -87,7 +89,9 @@ export function ScenesWorkspace() {
         </div>
         <div className="header-right">
           <span className="user-email">shaun.buswell@elevana.com</span>
-          <button className="logout-btn">Logout</button>
+          <button className="logout-btn" onClick={logout} type="button">
+            Logout
+          </button>
         </div>
       </header>
       <div className="app-layout">
