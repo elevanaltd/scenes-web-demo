@@ -27,6 +27,7 @@ export function useVideos(projectEavCode: string | undefined) {
         .from('videos')
         .select('id, title, eav_code, created_at')
         .eq('eav_code', projectEavCode)
+        .order('title', { ascending: true })
 
       console.log('[useVideos] Response:', { dataCount: data?.length ?? 0, error: error?.message })
 
