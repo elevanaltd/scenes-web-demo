@@ -1,9 +1,9 @@
 .autocomplete-field {
-  position: relative;
   width: 100%;
   font-family: inherit;
-  /* Ensure dropdown appears above all table rows and modals */
-  z-index: 1000;
+  /* NOTE: Intentionally NOT position: relative to allow fixed positioned dropdown
+     to escape table cell stacking context. The dropdown uses position: fixed
+     with coordinates calculated from getBoundingClientRect() */
 }
 
 .autocomplete-input-wrapper {
@@ -57,12 +57,13 @@
 
 .autocomplete-dropdown {
   /* Position will be set via inline style (fixed positioning) */
+  /* This allows dropdown to escape any table/div stacking contexts */
   background: white;
   border: 1px solid #d0d0d0;
   border-radius: 0 0 4px 4px;
   max-height: 200px;
   overflow-y: auto;
-  z-index: 9999;
+  z-index: 999999;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   pointer-events: auto;
 }
