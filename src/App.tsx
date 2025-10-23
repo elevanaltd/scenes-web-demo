@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useCallback } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import '@elevanaltd/ui/dist/index.css'
@@ -28,24 +28,68 @@ export function ScenesWorkspace() {
   const nav = useNavigation()
   const componentsQuery = useScriptComponents(nav.selectedScript?.id)
   const [expandedComponents, setExpandedComponents] = useState<Set<string>>(new Set())
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const componentRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
-  const toggleComponent = (componentId: string) => {
-    setExpandedComponents(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(componentId)) {
+  const toggleComponent = useCallback((componentId: string) => {
+    const scrollContainer = scrollContainerRef.current
+    const componentElement = componentRefs.current.get(componentId)
+
+    if (!scrollContainer || !componentElement) {
+      setExpandedComponents(prev => {
+        const newSet = new Set(prev)
+        if (newSet.has(componentId)) {
+          newSet.delete(componentId)
+        } else {
+          newSet.add(componentId)
+        }
+        return newSet
+      })
+      return
+    }
+
+    const isExpanded = expandedComponents.has(componentId)
+    const isCollapsing = isExpanded
+
+    if (isCollapsing) {
+      // Preserve visual position of header when collapsing
+      const rectBefore = componentElement.getBoundingClientRect()
+
+      setExpandedComponents(prev => {
+        const newSet = new Set(prev)
         newSet.delete(componentId)
-      } else {
+        return newSet
+      })
+
+      // Wait for layout to settle, then adjust scroll to keep header stationary
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const rectAfter = componentElement.getBoundingClientRect()
+          const delta = rectAfter.top - rectBefore.top
+          scrollContainer.scrollTop += delta
+        })
+      })
+    } else {
+      // Expanding - no scroll adjustment needed
+      setExpandedComponents(prev => {
+        const newSet = new Set(prev)
         newSet.add(componentId)
-      }
-      return newSet
-    })
-  }
+        return newSet
+      })
+    }
+  }, [expandedComponents])
 
   return (
-    <>
-      <div className="header">
-        <h1>Scene Planning & Shot Lists</h1>
-      </div>
+    <div className="scenes-workspace">
+      <header className="app-header">
+        <div className="header-left">
+          <h1>EAV Orchestrator</h1>
+        </div>
+        <div className="header-right">
+          <span className="user-email">shaun.buswell@elevana.com</span>
+          <button className="logout-btn">Logout</button>
+        </div>
+      </header>
       <div className="app-layout">
         <ScenesNavigationContainer
           onComponentSelected={(componentId) => {
@@ -56,76 +100,71 @@ export function ScenesWorkspace() {
           }}
         />
         <div className="main-content">
-          <div className="content-wrapper">
-          <div className="content-scroll">
-            {!nav.selectedScript ? (
-              <>
-                <div className="error-message">
-                  ℹ️ <strong>Select a Script</strong> - Choose a project, video, and script to view all components and shots
+          <div className="content-header">
+            <h2>Scene Planning & Shot Lists</h2>
+            <p>Select a video from the navigation to start planning its scenes and shots</p>
+          </div>
+          <div className="content-container">
+            <div className="content-scroll" ref={scrollContainerRef}>
+              {!nav.selectedScript ? (
+                <div className="empty-state">
+                  <h3>Select a Script</h3>
+                  <p>Choose a project, video, and script to view all components and shots</p>
                 </div>
-              </>
-            ) : (
-              <>
-                {componentsQuery.isLoading && <div className="error-message">Loading components...</div>}
-                {componentsQuery.error && (
-                  <div className="error-message" style={{ background: '#fee', borderColor: '#fcc', color: '#c33' }}>
-                    Error loading components: {componentsQuery.error?.message}
-                  </div>
-                )}
-                {componentsQuery.data && componentsQuery.data.length === 0 && (
-                  <div className="error-message">No components found for this script</div>
-                )}
-                {componentsQuery.data && componentsQuery.data.map((component: ScriptComponent) => (
-                  <div
-                    key={component.id}
-                    style={{
-                      marginBottom: '20px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      overflow: 'hidden',
-                      background: 'white',
-                    }}
-                  >
-                    <button
-                      onClick={() => toggleComponent(component.id)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        background: '#f5f5f5',
-                        border: 'none',
-                        borderBottom: expandedComponents.has(component.id) ? '1px solid #ddd' : 'none',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        fontWeight: 500,
-                        fontSize: '14px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
+              ) : (
+                <>
+                  {componentsQuery.isLoading && (
+                    <div className="empty-state">
+                      <p>Loading components...</p>
+                    </div>
+                  )}
+                  {componentsQuery.error && (
+                    <div className="error-state">
+                      <p>Error loading components: {componentsQuery.error?.message}</p>
+                    </div>
+                  )}
+                  {componentsQuery.data && componentsQuery.data.length === 0 && (
+                    <div className="empty-state">
+                      <p>No components found for this script</p>
+                    </div>
+                  )}
+                  {componentsQuery.data && componentsQuery.data.map((component: ScriptComponent) => (
+                    <div
+                      key={component.id}
+                      className="component-card"
+                      ref={(el) => {
+                        if (el) {
+                          componentRefs.current.set(component.id, el)
+                        } else {
+                          componentRefs.current.delete(component.id)
+                        }
                       }}
                     >
-                      <span>Scene {component.component_number}: {component.content.substring(0, 50)}...</span>
-                      <span>{expandedComponents.has(component.id) ? '▼' : '▶'}</span>
-                    </button>
-                    {expandedComponents.has(component.id) && (
-                      <div style={{ padding: '16px' }}>
-                        <div style={{ marginBottom: '16px' }}>
-                          <h3 style={{ margin: '0 0 8px 0' }}>{`Scene ${component.component_number}`}</h3>
-                          <p style={{ margin: '0', color: '#666', lineHeight: '1.6', fontSize: '14px' }}>
-                            {component.content}
-                          </p>
+                      <button
+                        className="component-header"
+                        onClick={() => toggleComponent(component.id)}
+                      >
+                        <span>Scene {component.component_number}: {component.content.substring(0, 50)}...</span>
+                        <span className="toggle-icon">{expandedComponents.has(component.id) ? '▼' : '▶'}</span>
+                      </button>
+                      {expandedComponents.has(component.id) && (
+                        <div className="component-body">
+                          <div className="component-text">
+                            <h3>{`Scene ${component.component_number}`}</h3>
+                            <p>{component.content}</p>
+                          </div>
+                          <ShotTable component={component} />
                         </div>
-                        <ShotTable component={component} />
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </>
-            )}
+                      )}
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }
 

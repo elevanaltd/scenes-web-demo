@@ -35,13 +35,13 @@ describe('App Layout - Script Editor Pattern', () => {
     )
 
     // Verify header exists and has proper structure
-    const header = container.querySelector('.header')
+    const header = container.querySelector('.app-header')
     expect(header).toBeTruthy()
-    expect(header?.className).toContain('header')
+    expect(header?.className).toContain('app-header')
 
     // Verify header contains the title
     const title = header?.querySelector('h1')
-    expect(title?.textContent).toContain('Scene Planning & Shot Lists')
+    expect(title?.textContent).toContain('EAV Orchestrator')
   })
 
   it('should have app-layout with sidebar and main-content structure', () => {
@@ -69,9 +69,12 @@ describe('App Layout - Script Editor Pattern', () => {
     const mainContent = container.querySelector('.main-content')
     expect(mainContent).toBeTruthy()
 
-    // Verify content is properly structured for centering
-    const contentWrapper = container.querySelector('.content-wrapper')
-    expect(contentWrapper).toBeTruthy()
+    // Verify content is properly structured
+    const contentHeader = container.querySelector('.content-header')
+    expect(contentHeader).toBeTruthy()
+
+    const contentContainer = container.querySelector('.content-container')
+    expect(contentContainer).toBeTruthy()
 
     const contentScroll = container.querySelector('.content-scroll')
     expect(contentScroll).toBeTruthy()
@@ -95,14 +98,14 @@ describe('App Layout - Script Editor Pattern', () => {
     )
 
     // Header should exist
-    const header = container.querySelector('.header')
+    const header = container.querySelector('.app-header')
     expect(header).toBeTruthy()
 
     // App-layout should exist
     const appLayout = container.querySelector('.app-layout')
     expect(appLayout).toBeTruthy()
 
-    // Both should be direct children of the same parent (fragment)
+    // Both should be direct children of the same parent
     // Header should appear before app-layout in source order
     expect(header && appLayout).toBeTruthy()
   })
@@ -124,10 +127,10 @@ describe('App Layout - Script Editor Pattern', () => {
       </QueryClientProvider>
     )
 
-    // Verify content-wrapper is properly classed
-    const contentWrapper = container.querySelector('.content-wrapper')
-    expect(contentWrapper).toBeTruthy()
-    expect(contentWrapper?.className).toContain('content-wrapper')
+    // Verify content-container exists and is properly styled
+    const contentContainer = container.querySelector('.content-container')
+    expect(contentContainer).toBeTruthy()
+    expect(contentContainer?.className).toContain('content-container')
 
     // Verify scrollable area exists
     const contentScroll = container.querySelector('.content-scroll')
