@@ -387,52 +387,52 @@ export type Database = {
       shots: {
         Row: {
           action: string | null
+          completed: boolean
           created_at: string | null
           id: string
-          int_ext: string | null
-          location: string | null
-          plot_notes: string | null
-          props: string | null
-          requires_actor: boolean | null
+          location_other: string | null
+          location_start_point: string | null
+          owner_user_id: string | null
           scene_id: string
           shot_number: number
           shot_type: string | null
-          status: string | null
           subject: string | null
+          subject_other: string | null
+          tracking_type: string | null
           updated_at: string | null
           variant: string | null
         }
         Insert: {
           action?: string | null
+          completed?: boolean
           created_at?: string | null
           id?: string
-          int_ext?: string | null
-          location?: string | null
-          plot_notes?: string | null
-          props?: string | null
-          requires_actor?: boolean | null
+          location_other?: string | null
+          location_start_point?: string | null
+          owner_user_id?: string | null
           scene_id: string
           shot_number: number
           shot_type?: string | null
-          status?: string | null
           subject?: string | null
+          subject_other?: string | null
+          tracking_type?: string | null
           updated_at?: string | null
           variant?: string | null
         }
         Update: {
           action?: string | null
+          completed?: boolean
           created_at?: string | null
           id?: string
-          int_ext?: string | null
-          location?: string | null
-          plot_notes?: string | null
-          props?: string | null
-          requires_actor?: boolean | null
+          location_other?: string | null
+          location_start_point?: string | null
+          owner_user_id?: string | null
           scene_id?: string
           shot_number?: number
           shot_type?: string | null
-          status?: string | null
           subject?: string | null
+          subject_other?: string | null
+          tracking_type?: string | null
           updated_at?: string | null
           variant?: string | null
         }
@@ -584,7 +584,7 @@ export type Database = {
         }[]
       }
       check_client_access: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           can_see_projects: boolean
           can_see_user_clients: boolean
@@ -593,30 +593,6 @@ export type Database = {
           current_user_role: string
         }[]
       }
-      citext: {
-        Args: { "": boolean } | { "": string } | { "": unknown }
-        Returns: string
-      }
-      citext_hash: {
-        Args: { "": string }
-        Returns: number
-      }
-      citextin: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      citextout: {
-        Args: { "": string }
-        Returns: unknown
-      }
-      citextrecv: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      citextsend: {
-        Args: { "": string }
-        Returns: string
-      }
       get_comment_descendants: {
         Args: { parent_id: string }
         Returns: {
@@ -624,15 +600,12 @@ export type Database = {
         }[]
       }
       get_user_accessible_comment_ids: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           comment_id: string
         }[]
       }
-      get_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_user_role: { Args: never; Returns: string }
       hard_delete_comment_tree: {
         Args: { p_comment_id: string; p_reason?: string }
         Returns: Json
@@ -645,18 +618,12 @@ export type Database = {
         Args: { instance: Json; schema: Json }
         Returns: boolean
       }
-      jsonschema_is_valid: {
-        Args: { schema: Json }
-        Returns: boolean
-      }
+      jsonschema_is_valid: { Args: { schema: Json }; Returns: boolean }
       jsonschema_validation_errors: {
         Args: { instance: Json; schema: Json }
         Returns: string[]
       }
-      refresh_user_accessible_scripts: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      refresh_user_accessible_scripts: { Args: never; Returns: undefined }
       save_script_with_components: {
         Args: {
           p_components: Json
@@ -674,6 +641,12 @@ export type Database = {
           video_id: string | null
           yjs_state: string | null
         }[]
+        SetofOptions: {
+          from: "*"
+          to: "scripts"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       update_script_status: {
         Args: { p_new_status: string; p_script_id: string }
@@ -687,6 +660,12 @@ export type Database = {
           video_id: string | null
           yjs_state: string | null
         }[]
+        SetofOptions: {
+          from: "*"
+          to: "scripts"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
     }
     Enums: {
