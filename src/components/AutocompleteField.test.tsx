@@ -2,8 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AutocompleteField } from './AutocompleteField'
+import { DropdownProvider } from '../contexts/DropdownContext'
 
 const mockOptions = ['WS', 'MID', 'CU', 'FP', 'OBJ-L', 'OBJ-R', 'UNDER']
+
+// Helper to render with DropdownProvider
+function renderWithDropdown(component: React.ReactElement) {
+  return render(<DropdownProvider>{component}</DropdownProvider>)
+}
 
 describe('AutocompleteField', () => {
   let onChange: ReturnType<typeof vi.fn>
@@ -16,7 +22,7 @@ describe('AutocompleteField', () => {
 
   describe('Basic Input & Filtering', () => {
     it('should render input field with placeholder', () => {
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value={null}
           onChange={onChange}
@@ -32,7 +38,7 @@ describe('AutocompleteField', () => {
 
     it('should show filtered suggestions as user types', async () => {
       const user = userEvent.setup()
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value={null}
           onChange={onChange}
@@ -49,7 +55,7 @@ describe('AutocompleteField', () => {
 
     it('should filter options case-insensitively', async () => {
       const user = userEvent.setup()
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value={null}
           onChange={onChange}
@@ -66,7 +72,7 @@ describe('AutocompleteField', () => {
 
     it('should not show dropdown when no matches', async () => {
       const user = userEvent.setup()
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value={null}
           onChange={onChange}
@@ -85,7 +91,7 @@ describe('AutocompleteField', () => {
   describe('Selection & Auto-Save on Blur', () => {
     it('should call onChange with exact match when blurring after exact match', async () => {
       const user = userEvent.setup()
-      const { rerender } = render(
+      const { rerender } = renderWithDropdown(
         <AutocompleteField
           value={null}
           onChange={onChange}
@@ -103,7 +109,7 @@ describe('AutocompleteField', () => {
 
     it('should save value when selecting from dropdown', async () => {
       const user = userEvent.setup()
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value={null}
           onChange={onChange}
@@ -124,7 +130,7 @@ describe('AutocompleteField', () => {
 
     it('should clear value when input is empty and blurred', async () => {
       const user = userEvent.setup()
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value="WS"
           onChange={onChange}
@@ -144,7 +150,7 @@ describe('AutocompleteField', () => {
 
     it('should reset to previous value when no match found on fixed list (allowOther=false)', async () => {
       const user = userEvent.setup()
-      const { rerender } = render(
+      const { rerender } = renderWithDropdown(
         <AutocompleteField
           value="WS"
           onChange={onChange}
@@ -170,7 +176,7 @@ describe('AutocompleteField', () => {
   describe('Keyboard Navigation', () => {
     it('should navigate suggestions with arrow keys', async () => {
       const user = userEvent.setup()
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value={null}
           onChange={onChange}
@@ -190,7 +196,7 @@ describe('AutocompleteField', () => {
 
     it('should select option with Enter key', async () => {
       const user = userEvent.setup()
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value={null}
           onChange={onChange}
@@ -209,7 +215,7 @@ describe('AutocompleteField', () => {
 
     it('should reset input value with Escape key', async () => {
       const user = userEvent.setup()
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value="WS"
           onChange={onChange}
@@ -237,7 +243,7 @@ describe('AutocompleteField', () => {
   describe('"Other" Option Handling (allowOther=true)', () => {
     it('should show "Add as Other" option for non-matching input', async () => {
       const user = userEvent.setup()
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value={null}
           onChange={onChange}
@@ -254,7 +260,7 @@ describe('AutocompleteField', () => {
 
     it('should show validation dialog when clicking "Add as Other"', async () => {
       const user = userEvent.setup()
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value={null}
           onChange={onChange}
@@ -276,7 +282,7 @@ describe('AutocompleteField', () => {
 
     it('should call onChange and onOtherChange when confirming "Other"', async () => {
       const user = userEvent.setup()
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value={null}
           onChange={onChange}
@@ -301,7 +307,7 @@ describe('AutocompleteField', () => {
 
     it('should cancel validation dialog when clicking Cancel', async () => {
       const user = userEvent.setup()
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value={null}
           onChange={onChange}
@@ -325,7 +331,7 @@ describe('AutocompleteField', () => {
 
     it('should show validation dialog with message about unrecognized value', async () => {
       const user = userEvent.setup()
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value={null}
           onChange={onChange}
@@ -348,7 +354,7 @@ describe('AutocompleteField', () => {
 
   describe('Conditional "Other" Text Input', () => {
     it('should show conditional text input when showOtherText=true and value="Other"', () => {
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value="Other"
           onChange={onChange}
@@ -366,7 +372,7 @@ describe('AutocompleteField', () => {
     })
 
     it('should not show conditional text input when value is not "Other"', () => {
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value="WS"
           onChange={onChange}
@@ -384,7 +390,7 @@ describe('AutocompleteField', () => {
 
     it('should call onOtherChange when typing and blurring Other text input', async () => {
       const user = userEvent.setup()
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value="Other"
           onChange={onChange}
@@ -409,7 +415,7 @@ describe('AutocompleteField', () => {
 
   describe('Loading State', () => {
     it('should show spinner when isLoading=true', () => {
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value={null}
           onChange={onChange}
@@ -424,7 +430,7 @@ describe('AutocompleteField', () => {
     })
 
     it('should disable input when isLoading=true', () => {
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value={null}
           onChange={onChange}
@@ -441,7 +447,7 @@ describe('AutocompleteField', () => {
 
   describe('Disabled State', () => {
     it('should disable input when disabled=true', () => {
-      render(
+      renderWithDropdown(
         <AutocompleteField
           value={null}
           onChange={onChange}

@@ -47,8 +47,18 @@
 
 .shot-table-wrapper {
   overflow-x: auto;
+  overflow-y: visible;
   border: 1px solid #ddd;
   border-radius: 4px;
+  /* Allow dropdowns to escape */
+  position: relative;
+  z-index: 0;
+}
+
+/* Create a scrolling inner container for horizontal overflow */
+.shot-table-scroll {
+  overflow: visible;
+  overflow-y: visible;
 }
 
 .shot-table {
@@ -56,6 +66,7 @@
   border-collapse: collapse;
   font-size: 12px;
   background: white;
+  border-spacing: 0;
 }
 
 .shot-table th {
@@ -74,7 +85,19 @@
 .shot-table td {
   padding: 8px 6px;
   border-bottom: 1px solid #eee;
-  vertical-align: middle;
+  vertical-align: top;
+  /* Allow dropdown positioning without clipping */
+  position: relative;
+  z-index: auto; /* Don't create stacking context */
+  /* Prevent cell from clipping overflow */
+  overflow: visible;
+}
+
+.shot-table tbody tr {
+  /* Extra padding allows dropdown to show below row */
+  height: auto;
+  position: relative;
+  z-index: auto; /* Don't create stacking context */
 }
 
 .shot-table tbody tr:hover {
@@ -200,6 +223,9 @@
 .conditional-input {
   font-size: 12px;
   padding: 6px 8px;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: white;
 }
 
 /* Buttons in table */

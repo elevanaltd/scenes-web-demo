@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
+import { useDropdown } from '../contexts/DropdownContext'
 import './AutocompleteField.css'
 
 interface AutocompleteFieldProps {
@@ -40,14 +41,39 @@ export function AutocompleteField({
   showOtherText = false,
   otherValue = null,
 }: AutocompleteFieldProps) {
+  const { activeDropdownId, setActiveDropdownId } = useDropdown()
+
+  // Generate unique ID for this instance (stable across re-renders)
+  const dropdownId = useMemo(() => Math.random().toString(36).substr(2, 9), [])
+  const isActive = activeDropdownId === dropdownId
+
   const [inputValue, setInputValue] = useState(value || '')
   const [filteredOptions, setFilteredOptions] = useState<string[]>([])
-  const [isOpen, setIsOpen] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const [showValidationDialog, setShowValidationDialog] = useState(false)
   const [pendingValue, setPendingValue] = useState<string | null>(null)
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({})
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Sync parent value changes to local state
+  useEffect(() => {
+    setInputValue(value || '')
+  }, [value])
+
+  // Calculate dropdown position when this dropdown becomes active
+  useEffect(() => {
+    if (isActive && inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect()
+      setDropdownStyle({
+        position: 'fixed',
+        top: `${rect.bottom}px`,
+        left: `${rect.left}px`,
+        right: 'auto',
+        width: `${rect.width}px`,
+      })
+    }
+  }, [isActive])
 
   // Filter options based on input (case-insensitive, substring matching)
   const fuzzyFilter = (input: string, opts: string[]) => {
@@ -74,19 +100,28 @@ export function AutocompleteField({
     const filtered = fuzzyFilter(inputValue, options)
     setFilteredOptions(filtered)
     setSelectedIndex(-1)
-    setIsOpen(filtered.length > 0 || inputValue.length > 0)
-  }, [inputValue, options, isLoading])
 
-  // Close dropdown when clicking outside
+    // Open this dropdown if there are options to show
+    if (filtered.length > 0 || inputValue.length > 0) {
+      setActiveDropdownId(dropdownId)
+    } else {
+      // Close if no options and no input
+      setActiveDropdownId(null)
+    }
+  }, [inputValue, options, isLoading, dropdownId, setActiveDropdownId])
+
+  // Close this dropdown when clicking outside
   useEffect(() => {
+    if (!isActive) return
+
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsOpen(false)
+        setActiveDropdownId(null)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [isActive, setActiveDropdownId])
 
   // Handle blur → validation for non-matching values
   const handleBlur = () => {
@@ -96,7 +131,7 @@ export function AutocompleteField({
     if (!trimmedInput) {
       onChange(null)
       setInputValue('')
-      setIsOpen(false)
+      setActiveDropdownId(null)
       return
     }
 
@@ -105,7 +140,7 @@ export function AutocompleteField({
     if (exactMatch) {
       onChange(exactMatch)
       setInputValue(exactMatch)
-      setIsOpen(false)
+      setActiveDropdownId(null)
       return
     }
 
@@ -120,7 +155,7 @@ export function AutocompleteField({
         // For fixed lists, show "not found" message and reset
         // Reset to previous value
         setInputValue(value || '')
-        setIsOpen(false)
+        setActiveDropdownId(null)
         // Could show toast here: "Value not found in options"
       }
     }
@@ -128,7 +163,7 @@ export function AutocompleteField({
 
   // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!isOpen && e.key !== 'Enter') return
+    if (!isActive && e.key !== 'Enter') return
 
     switch (e.key) {
       case 'ArrowDown':
@@ -154,7 +189,7 @@ export function AutocompleteField({
           const selected = filteredOptions[selectedIndex]
           onChange(selected)
           setInputValue(selected)
-          setIsOpen(false)
+          setActiveDropdownId(null)
         } else {
           // No selection, trigger blur logic
           handleBlur()
@@ -163,7 +198,7 @@ export function AutocompleteField({
 
       case 'Escape':
         e.preventDefault()
-        setIsOpen(false)
+        setActiveDropdownId(null)
         setInputValue(value || '')
         setSelectedIndex(-1)
         break
@@ -177,7 +212,7 @@ export function AutocompleteField({
   const handleSelectOption = (option: string) => {
     onChange(option)
     setInputValue(option)
-    setIsOpen(false)
+    setActiveDropdownId(null)
     setShowValidationDialog(false)
   }
 
@@ -191,6 +226,7 @@ export function AutocompleteField({
       setInputValue('Other')
       setShowValidationDialog(false)
       setPendingValue(null)
+      setActiveDropdownId(null)
     }
   }
 
@@ -199,7 +235,7 @@ export function AutocompleteField({
     setShowValidationDialog(false)
     setPendingValue(null)
     setInputValue(value || '')
-    setIsOpen(false)
+    setActiveDropdownId(null)
   }
 
   // Handle "Use selected" from suggestions (clicking a suggestion in validation dialog)
@@ -219,7 +255,7 @@ export function AutocompleteField({
           onBlur={handleBlur}
           onFocus={() => {
             if (filteredOptions.length > 0 || inputValue.length > 0) {
-              setIsOpen(true)
+              setActiveDropdownId(dropdownId)
             }
           }}
           onKeyDown={handleKeyDown}
@@ -232,13 +268,16 @@ export function AutocompleteField({
       </div>
 
       {/* Dropdown suggestions */}
-      {isOpen && !isLoading && filteredOptions.length > 0 && (
-        <div className="autocomplete-dropdown">
+      {isActive && !isLoading && filteredOptions.length > 0 && (
+        <div className="autocomplete-dropdown" style={dropdownStyle}>
           {filteredOptions.map((option, idx) => (
             <div
               key={option}
               className={`autocomplete-option ${idx === selectedIndex ? 'selected' : ''}`}
-              onClick={() => handleSelectOption(option)}
+              onMouseDown={(e) => {
+                e.preventDefault() // Prevent blur from firing
+                handleSelectOption(option)
+              }}
               role="option"
               aria-selected={idx === selectedIndex}
             >
@@ -249,11 +288,12 @@ export function AutocompleteField({
       )}
 
       {/* "Add as Other" suggestion (when typing non-matching value) */}
-      {isOpen && !isLoading && inputValue.trim() && filteredOptions.length === 0 && allowOther && (
-        <div className="autocomplete-dropdown">
+      {isActive && !isLoading && inputValue.trim() && filteredOptions.length === 0 && allowOther && (
+        <div className="autocomplete-dropdown" style={dropdownStyle}>
           <div
             className="autocomplete-option add-as-other"
-            onClick={() => {
+            onMouseDown={(e) => {
+              e.preventDefault() // Prevent blur from firing
               setPendingValue(inputValue.trim())
               setShowValidationDialog(true)
             }}

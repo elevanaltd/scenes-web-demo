@@ -2,6 +2,8 @@
   position: relative;
   width: 100%;
   font-family: inherit;
+  /* Ensure dropdown appears above all table rows and modals */
+  z-index: 1000;
 }
 
 .autocomplete-input-wrapper {
@@ -54,18 +56,15 @@
 }
 
 .autocomplete-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
+  /* Position will be set via inline style (fixed positioning) */
   background: white;
   border: 1px solid #d0d0d0;
-  border-top: none;
   border-radius: 0 0 4px 4px;
   max-height: 200px;
   overflow-y: auto;
-  z-index: 1000;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 9999;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  pointer-events: auto;
 }
 
 .autocomplete-option {
@@ -111,7 +110,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+  z-index: 99999;
 }
 
 .validation-dialog {

@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useScene } from '../hooks/useScene'
 import { useShots } from '../hooks/useShots'
 import { useDropdownOptions } from '../hooks/useDropdownOptions'
 import { useShotMutations } from '../hooks/useShotMutations'
+import { DropdownProvider } from '../contexts/DropdownContext'
 import type { ScriptComponent, Shot } from '../types'
 import { AutocompleteField } from './AutocompleteField'
 import './ShotTable.css'
@@ -23,6 +24,9 @@ interface ShotTableProps {
  * Conditional rendering of location_other and subject_other when parent is set to "Other".
  *
  * North Star I6: Independent shots table (scene_planning_state association)
+ *
+ * Performance optimization: Text fields use local state + debounced blur saves.
+ * This prevents character loss from rapid mutations interfering with input rendering.
  */
 export function ShotTable({ component }: ShotTableProps) {
   const sceneQuery = useScene(component.id)
@@ -31,6 +35,11 @@ export function ShotTable({ component }: ShotTableProps) {
   const shotsQuery = useShots(sceneId)
   const dropdownsQuery = useDropdownOptions()
   const mutations = useShotMutations()
+
+  // Track pending mutations per shot to show optimistic UI
+  const [pendingMutations, setPendingMutations] = useState<Record<string, string>>({})
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const debounceTimerRef = useRef<Record<string, any>>({})
 
   // Group dropdown options by field_name for easy access
   const dropdownMap = React.useMemo(() => {
@@ -63,13 +72,46 @@ export function ShotTable({ component }: ShotTableProps) {
     }
   }
 
-  // Handle field update with auto-save on blur
-  const handleFieldChange = (shotId: string, field: keyof Shot, value: string | null) => {
+  // Handle dropdown/autocomplete field updates (immediate save via mutation)
+  const handleAutocompleteChange = (shotId: string, field: keyof Shot, value: string | null) => {
     mutations.updateShot.mutate({
       id: shotId,
       [field]: value,
     })
   }
+
+  // Handle text field changes with debounced save
+  // This allows local state to update immediately without waiting for mutations
+  const handleTextFieldChange = (shotId: string, field: keyof Shot, value: string) => {
+    // Track this change as pending for optimistic UI
+    setPendingMutations((prev) => ({
+      ...prev,
+      [`${shotId}-${field}`]: value,
+    }))
+
+    // Clear existing timer for this field
+    const timerKey = `${shotId}-${field}`
+    if (debounceTimerRef.current[timerKey]) {
+      clearTimeout(debounceTimerRef.current[timerKey])
+    }
+
+    // Set new timer to save after user stops typing
+    debounceTimerRef.current[timerKey] = setTimeout(() => {
+      mutations.updateShot.mutate({
+        id: shotId,
+        [field]: value || null,
+      })
+      delete debounceTimerRef.current[timerKey]
+    }, 500) // Wait 500ms after user stops typing
+  }
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    const timersToClean = debounceTimerRef.current
+    return () => {
+      Object.values(timersToClean).forEach(clearTimeout)
+    }
+  }, [])
 
   if (sceneQuery.isLoading || shotsQuery.isLoading) {
     return <div className="shot-table-loading">Loading shots...</div>
@@ -86,8 +128,9 @@ export function ShotTable({ component }: ShotTableProps) {
   const shots = shotsQuery.data || []
 
   return (
-    <div className="shot-table-container">
-      <div className="shot-table-header">
+    <DropdownProvider>
+      <div className="shot-table-container">
+        <div className="shot-table-header">
         <h3>Shots for Component {component.component_number}</h3>
         <button className="btn btn-primary" onClick={handleAddShot}>
           + Add Shot
@@ -122,7 +165,7 @@ export function ShotTable({ component }: ShotTableProps) {
                     <td className="col-shot-type">
                       <AutocompleteField
                         value={shot.shot_type || null}
-                        onChange={(value) => handleFieldChange(shot.id, 'shot_type', value)}
+                        onChange={(value) => handleAutocompleteChange(shot.id, 'shot_type', value)}
                         options={dropdownMap['shot_type'] || []}
                         allowOther={false}
                         placeholder="Select..."
@@ -134,8 +177,8 @@ export function ShotTable({ component }: ShotTableProps) {
                     <td className="col-location">
                       <AutocompleteField
                         value={shot.location_start_point || null}
-                        onChange={(value) => handleFieldChange(shot.id, 'location_start_point', value)}
-                        onOtherChange={(value) => handleFieldChange(shot.id, 'location_other', value)}
+                        onChange={(value) => handleAutocompleteChange(shot.id, 'location_start_point', value)}
+                        onOtherChange={(value) => handleAutocompleteChange(shot.id, 'location_other', value)}
                         options={dropdownMap['location_start_point'] || []}
                         allowOther={true}
                         placeholder="Select..."
@@ -149,7 +192,7 @@ export function ShotTable({ component }: ShotTableProps) {
                     <td className="col-tracking">
                       <AutocompleteField
                         value={shot.tracking_type || null}
-                        onChange={(value) => handleFieldChange(shot.id, 'tracking_type', value)}
+                        onChange={(value) => handleAutocompleteChange(shot.id, 'tracking_type', value)}
                         options={dropdownMap['tracking_type'] || []}
                         allowOther={false}
                         placeholder="Select..."
@@ -161,8 +204,8 @@ export function ShotTable({ component }: ShotTableProps) {
                     <td className="col-subject">
                       <AutocompleteField
                         value={shot.subject || null}
-                        onChange={(value) => handleFieldChange(shot.id, 'subject', value)}
-                        onOtherChange={(value) => handleFieldChange(shot.id, 'subject_other', value)}
+                        onChange={(value) => handleAutocompleteChange(shot.id, 'subject', value)}
+                        onOtherChange={(value) => handleAutocompleteChange(shot.id, 'subject_other', value)}
                         options={dropdownMap['subject'] || []}
                         allowOther={true}
                         placeholder="Select..."
@@ -172,33 +215,23 @@ export function ShotTable({ component }: ShotTableProps) {
                       />
                     </td>
 
-                    {/* variant - Free text */}
+                    {/* variant - Free text with debounced save */}
                     <td className="col-variant">
                       <input
                         type="text"
-                        value={shot.variant || ''}
-                        onChange={(e) => handleFieldChange(shot.id, 'variant', e.target.value || null)}
-                        onBlur={(e) => {
-                          // Ensure value is saved on blur
-                          const finalValue = e.target.value || null
-                          handleFieldChange(shot.id, 'variant', finalValue)
-                        }}
+                        value={pendingMutations[`${shot.id}-variant`] ?? shot.variant ?? ''}
+                        onChange={(e) => handleTextFieldChange(shot.id, 'variant', e.target.value)}
                         placeholder="e.g., front door, siemens"
                         className="form-control form-control-text"
                       />
                     </td>
 
-                    {/* action - Free text */}
+                    {/* action - Free text with debounced save */}
                     <td className="col-action">
                       <input
                         type="text"
-                        value={shot.action || ''}
-                        onChange={(e) => handleFieldChange(shot.id, 'action', e.target.value || null)}
-                        onBlur={(e) => {
-                          // Ensure value is saved on blur
-                          const finalValue = e.target.value || null
-                          handleFieldChange(shot.id, 'action', finalValue)
-                        }}
+                        value={pendingMutations[`${shot.id}-action`] ?? shot.action ?? ''}
+                        onChange={(e) => handleTextFieldChange(shot.id, 'action', e.target.value)}
                         placeholder="e.g., demo, movement"
                         className="form-control form-control-text"
                       />
@@ -226,12 +259,8 @@ export function ShotTable({ component }: ShotTableProps) {
                       <td colSpan={6}>
                         <input
                           type="text"
-                          value={shot.location_other || ''}
-                          onChange={(e) => handleFieldChange(shot.id, 'location_other', e.target.value || null)}
-                          onBlur={(e) => {
-                            const finalValue = e.target.value || null
-                            handleFieldChange(shot.id, 'location_other', finalValue)
-                          }}
+                          value={pendingMutations[`${shot.id}-location_other`] ?? shot.location_other ?? ''}
+                          onChange={(e) => handleTextFieldChange(shot.id, 'location_other', e.target.value)}
                           placeholder="Enter custom location..."
                           className="form-control form-control-text conditional-input"
                         />
@@ -249,12 +278,8 @@ export function ShotTable({ component }: ShotTableProps) {
                       <td colSpan={6}>
                         <input
                           type="text"
-                          value={shot.subject_other || ''}
-                          onChange={(e) => handleFieldChange(shot.id, 'subject_other', e.target.value || null)}
-                          onBlur={(e) => {
-                            const finalValue = e.target.value || null
-                            handleFieldChange(shot.id, 'subject_other', finalValue)
-                          }}
+                          value={pendingMutations[`${shot.id}-subject_other`] ?? shot.subject_other ?? ''}
+                          onChange={(e) => handleTextFieldChange(shot.id, 'subject_other', e.target.value)}
                           placeholder="Enter custom subject..."
                           className="form-control form-control-text conditional-input"
                         />
@@ -267,6 +292,7 @@ export function ShotTable({ component }: ShotTableProps) {
           </table>
         </div>
       )}
-    </div>
+      </div>
+    </DropdownProvider>
   )
 }
