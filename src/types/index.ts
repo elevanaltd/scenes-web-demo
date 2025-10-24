@@ -49,16 +49,19 @@ export interface Shot {
   id: string
   scene_id: string
   shot_number: number
-  status: string | null
-  location: string | null
-  subject: string | null
-  action: string | null
-  shot_type: string | null
-  int_ext: 'interior' | 'exterior' | null
-  requires_actor: boolean | null
-  props: string | null
-  variant: string | null
-  plot_notes: string | null
+  // User-facing fields (8 total)
+  shot_type: string | null // Dropdown: WS, MID, CU, FP, OBJ-L, OBJ-R, UNDER (no "Other")
+  location_start_point: string | null // Dropdown: Standard, Other (with "Other")
+  location_other: string | null // Free text: shown when location_start_point = "Other"
+  tracking_type: string | null // Dropdown: Tracking, Establishing, Standard, Photos (no "Other")
+  subject: string | null // Dropdown: Standard, Other (with "Other")
+  subject_other: string | null // Free text: shown when subject = "Other"
+  variant: string | null // Free text: e.g., "front door", "siemens"
+  action: string | null // Free text: e.g., "demo", "actor movement"
+  // Hidden fields (not shown in UI)
+  // Note: 'completed' field replaced with 'shot_status' in database (Phase 3+)
+  completed?: boolean | null
+  owner_user_id: string | null
   created_at: string
   updated_at: string
 }
@@ -75,7 +78,7 @@ export interface ProductionNote {
 
 export interface DropdownOption {
   id: string
-  field_name: 'status' | 'location' | 'action' | 'shot_type' | 'subject'
+  field_name: 'shot_type' | 'location_start_point' | 'tracking_type' | 'subject'
   option_value: string
   option_label: string
   sort_order: number

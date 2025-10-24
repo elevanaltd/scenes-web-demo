@@ -4,13 +4,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import '@elevanaltd/ui/dist/index.css'
 import { AuthProvider } from './contexts/AuthContext'
 import { NavigationProvider } from './contexts/NavigationContext'
+import { LastSavedProvider } from './contexts/LastSavedContext'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { PrivateRoute } from './components/auth/PrivateRoute'
 import { Login } from './components/auth/Login'
 import { ScenesNavigationContainer } from './components/ScenesNavigationContainer'
 import { ShotTable } from './components/ShotTable'
+import { Header } from '@elevanaltd/ui'
 import { useNavigation } from './contexts/NavigationContext'
 import { useAuth } from './hooks/useAuth'
+import { useLastSaved } from './contexts/LastSavedContext'
 import { useScriptComponents } from './hooks/useScriptComponents'
 import type { ScriptComponent } from './types'
 
@@ -27,7 +30,8 @@ const queryClient = new QueryClient({
 // Workspace with navigation
 export function ScenesWorkspace() {
   const nav = useNavigation()
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
+  const { lastSaved } = useLastSaved()
   const componentsQuery = useScriptComponents(nav.selectedScript?.id)
   const [expandedComponents, setExpandedComponents] = useState<Set<string>>(new Set())
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -81,19 +85,48 @@ export function ScenesWorkspace() {
     }
   }, [expandedComponents])
 
+  const [showSettingsDemo, setShowSettingsDemo] = useState(false)
+
   return (
     <div className="scenes-workspace">
-      <header className="app-header">
-        <div className="header-left">
-          <h1>EAV Orchestrator</h1>
-        </div>
-        <div className="header-right">
-          <span className="user-email">shaun.buswell@elevana.com</span>
-          <button className="logout-btn" onClick={logout} type="button">
+      <Header
+        title="Scene Planning"
+        userEmail={user?.email}
+        lastSaved={lastSaved || new Date()}
+        onSettings={() => setShowSettingsDemo(!showSettingsDemo)}
+      />
+      {/* Demo: Settings panel (app-specific content) */}
+      {showSettingsDemo && (
+        <div style={{
+          position: 'fixed',
+          top: '64px',
+          right: '16px',
+          background: 'white',
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
+          padding: '12px',
+          minWidth: '200px',
+          zIndex: 999,
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+        }}>
+          <div style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #f0f0f0' }}>
+            <h4 style={{ margin: '0 0 4px 0', fontSize: '14px' }}>Settings</h4>
+            <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>App-specific content</p>
+          </div>
+          <button onClick={logout} style={{
+            width: '100%',
+            padding: '8px',
+            background: '#ef4444',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}>
             Logout
           </button>
         </div>
-      </header>
+      )}
       <div className="app-layout">
         <ScenesNavigationContainer
           onComponentSelected={(componentId) => {
@@ -178,7 +211,8 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <NavigationProvider>
-            <ErrorBoundary>
+            <LastSavedProvider>
+              <ErrorBoundary>
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route
@@ -191,7 +225,8 @@ function App() {
                 />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
-            </ErrorBoundary>
+              </ErrorBoundary>
+            </LastSavedProvider>
           </NavigationProvider>
         </AuthProvider>
       </BrowserRouter>

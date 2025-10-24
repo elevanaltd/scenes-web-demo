@@ -9,6 +9,7 @@ const mockUseScene = vi.fn()
 const mockUseShots = vi.fn()
 const mockUseDropdownOptions = vi.fn()
 const mockShotMutations = vi.fn()
+const mockRecordSave = vi.fn()
 
 vi.mock('../hooks/useScene', () => ({
   useScene: (id: string | undefined) => mockUseScene(id),
@@ -24,6 +25,14 @@ vi.mock('../hooks/useDropdownOptions', () => ({
 
 vi.mock('../hooks/useShotMutations', () => ({
   useShotMutations: () => mockShotMutations(),
+}))
+
+vi.mock('../contexts/LastSavedContext', () => ({
+  useLastSaved: () => ({
+    recordSave: mockRecordSave,
+    lastSaved: null,
+    formattedLastSaved: 'Never',
+  }),
 }))
 
 const queryClient = new QueryClient({
@@ -48,16 +57,16 @@ describe('ShotTable', () => {
       id: '1',
       scene_id: 'scene1',
       shot_number: 1,
-      status: 'Not Started',
-      location: 'EXT-BUILDING',
-      subject: 'Building',
-      action: 'Establishing',
-      shot_type: 'Wide',
-      int_ext: 'exterior',
-      requires_actor: false,
-      props: null,
+      shot_type: 'WS',
+      location_start_point: 'Standard',
+      location_other: null,
+      tracking_type: 'Establishing',
+      subject: 'Standard',
+      subject_other: null,
       variant: null,
-      plot_notes: null,
+      action: 'Demo',
+      completed: false,
+      owner_user_id: null,
       created_at: '2025-01-01',
       updated_at: '2025-01-01',
     },

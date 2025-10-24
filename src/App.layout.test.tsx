@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { ScenesWorkspace } from './App'
 import { AuthProvider } from './contexts/AuthContext'
 import { NavigationProvider } from './contexts/NavigationContext'
+import { LastSavedProvider } from './contexts/LastSavedContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 /**
@@ -28,7 +29,9 @@ describe('App Layout - Script Editor Pattern', () => {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <NavigationProvider>
-            <ScenesWorkspace />
+            <LastSavedProvider>
+              <ScenesWorkspace />
+            </LastSavedProvider>
           </NavigationProvider>
         </AuthProvider>
       </QueryClientProvider>
@@ -41,7 +44,7 @@ describe('App Layout - Script Editor Pattern', () => {
 
     // Verify header contains the title
     const title = header?.querySelector('h1')
-    expect(title?.textContent).toContain('EAV Orchestrator')
+    expect(title?.textContent).toContain('Scene Planning')
   })
 
   it('should have app-layout with sidebar and main-content structure', () => {
@@ -55,7 +58,9 @@ describe('App Layout - Script Editor Pattern', () => {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <NavigationProvider>
-            <ScenesWorkspace />
+            <LastSavedProvider>
+              <ScenesWorkspace />
+            </LastSavedProvider>
           </NavigationProvider>
         </AuthProvider>
       </QueryClientProvider>
@@ -91,7 +96,9 @@ describe('App Layout - Script Editor Pattern', () => {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <NavigationProvider>
-            <ScenesWorkspace />
+            <LastSavedProvider>
+              <ScenesWorkspace />
+            </LastSavedProvider>
           </NavigationProvider>
         </AuthProvider>
       </QueryClientProvider>
@@ -121,7 +128,9 @@ describe('App Layout - Script Editor Pattern', () => {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <NavigationProvider>
-            <ScenesWorkspace />
+            <LastSavedProvider>
+              <ScenesWorkspace />
+            </LastSavedProvider>
           </NavigationProvider>
         </AuthProvider>
       </QueryClientProvider>

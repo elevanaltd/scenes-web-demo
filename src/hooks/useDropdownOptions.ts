@@ -5,8 +5,6 @@ import type { DropdownOption } from '../types'
 /**
  * Fetch dropdown options for shot fields
  * Can filter by specific field_name or fetch all options
- *
- * TODO: Phase 3 - Fix Supabase type definitions to include shots and dropdown_options tables
  */
 export function useDropdownOptions(fieldName?: DropdownOption['field_name']) {
   return useQuery({
@@ -14,6 +12,8 @@ export function useDropdownOptions(fieldName?: DropdownOption['field_name']) {
     queryFn: async () => {
       const supabase = getSupabaseClient()
 
+      // Note: dropdown_options table exists in database but not in shared-lib types yet
+      // Using type assertion until types are regenerated
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let query = (supabase as any)
         .from('dropdown_options')

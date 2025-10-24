@@ -26,7 +26,10 @@ export function useScene(scriptComponentId: string | undefined) {
         .eq('script_component_id', scriptComponentId)
         .maybeSingle()
 
-      if (findError) throw findError
+      if (findError) {
+        console.error('[useScene] Find error:', findError.message, findError.details, findError.hint)
+        throw findError
+      }
 
       // If scene exists, return it
       if (existingScene) {
@@ -43,7 +46,10 @@ export function useScene(scriptComponentId: string | undefined) {
         .select('id, script_component_id, created_at, updated_at')
         .single()
 
-      if (createError) throw createError
+      if (createError) {
+        console.error('[useScene] Create error:', createError.message, createError.details, createError.hint)
+        throw createError
+      }
 
       return newScene as Scene
     },

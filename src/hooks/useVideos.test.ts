@@ -40,9 +40,13 @@ describe('useVideos', () => {
       { id: '2', project_id: 'p1', title: 'Video B', eav_code: 'V002', created_at: '2025-01-02' },
     ]
 
-    const mockEq = vi.fn().mockResolvedValue({
+    const mockOrder = vi.fn().mockResolvedValue({
       data: mockVideos,
       error: null,
+    })
+
+    const mockEq = vi.fn().mockReturnValue({
+      order: mockOrder,
     })
 
     const mockSelect = vi.fn().mockReturnValue({
@@ -65,6 +69,7 @@ describe('useVideos', () => {
     expect(result.current.data).toEqual(mockVideos)
     expect(mockSelect).toHaveBeenCalledWith('id, title, eav_code, created_at')
     expect(mockEq).toHaveBeenCalledWith('eav_code', 'p1')
+    expect(mockOrder).toHaveBeenCalledWith('title', { ascending: true })
   })
 
   it('should skip query when project_id is undefined', async () => {

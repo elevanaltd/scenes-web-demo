@@ -184,58 +184,6 @@ export type Database = {
         }
         Relationships: []
       }
-      production_notes: {
-        Row: {
-          author_id: string
-          content: string
-          created_at: string | null
-          id: string
-          parent_id: string | null
-          shot_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          author_id: string
-          content: string
-          created_at?: string | null
-          id?: string
-          parent_id?: string | null
-          shot_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          author_id?: string
-          content?: string
-          created_at?: string | null
-          id?: string
-          parent_id?: string | null
-          shot_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "production_notes_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "production_notes_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "production_notes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "production_notes_shot_id_fkey"
-            columns: ["shot_id"]
-            isOneToOne: false
-            referencedRelation: "shots"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       projects: {
         Row: {
           client_filter: string | null
@@ -387,7 +335,6 @@ export type Database = {
       shots: {
         Row: {
           action: string | null
-          completed: boolean
           created_at: string | null
           id: string
           location_other: string | null
@@ -395,6 +342,7 @@ export type Database = {
           owner_user_id: string | null
           scene_id: string
           shot_number: number
+          shot_status: string | null
           shot_type: string | null
           subject: string | null
           subject_other: string | null
@@ -404,7 +352,6 @@ export type Database = {
         }
         Insert: {
           action?: string | null
-          completed?: boolean
           created_at?: string | null
           id?: string
           location_other?: string | null
@@ -412,6 +359,7 @@ export type Database = {
           owner_user_id?: string | null
           scene_id: string
           shot_number: number
+          shot_status?: string | null
           shot_type?: string | null
           subject?: string | null
           subject_other?: string | null
@@ -421,7 +369,6 @@ export type Database = {
         }
         Update: {
           action?: string | null
-          completed?: boolean
           created_at?: string | null
           id?: string
           location_other?: string | null
@@ -429,6 +376,7 @@ export type Database = {
           owner_user_id?: string | null
           scene_id?: string
           shot_number?: number
+          shot_status?: string | null
           shot_type?: string | null
           subject?: string | null
           subject_other?: string | null

@@ -1,9 +1,12 @@
-import React from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useScene } from '../hooks/useScene'
 import { useShots } from '../hooks/useShots'
 import { useDropdownOptions } from '../hooks/useDropdownOptions'
 import { useShotMutations } from '../hooks/useShotMutations'
-import type { ScriptComponent, DropdownOption } from '../types'
+import { DropdownProvider } from '../contexts/DropdownContext'
+import { useLastSaved } from '../contexts/LastSavedContext'
+import type { ScriptComponent, Shot } from '../types'
+import { AutocompleteField } from './AutocompleteField'
 import './ShotTable.css'
 
 interface ShotTableProps {
@@ -11,35 +14,44 @@ interface ShotTableProps {
 }
 
 /**
- * Shot Table Component
+ * Shot Table Component (Rebuilt)
  *
- * Displays shots for a script component with editable fields.
- * Supports add/edit/delete operations with dropdown fields for common options.
+ * Displays shots for a script component with autocomplete fields for each user-facing column.
+ * Uses new clean schema:
+ * - 8 user-facing fields: shot_type, location_start_point, location_other, tracking_type, subject, subject_other, variant, action
+ * - 2 hidden fields: completed, owner_user_id
+ *
+ * Auto-saves on blur (via AutocompleteField component).
+ * "Other" text fields (location_other, subject_other) render inline below dropdown when value = "Other".
  *
  * North Star I6: Independent shots table (scene_planning_state association)
+ *
+ * Performance optimization: Text fields use local state + debounced blur saves.
+ * This prevents character loss from rapid mutations interfering with input rendering.
  */
 export function ShotTable({ component }: ShotTableProps) {
-  // Get or create scene_planning_state record for this component
   const sceneQuery = useScene(component.id)
   const sceneId = sceneQuery.data?.id
 
   const shotsQuery = useShots(sceneId)
   const dropdownsQuery = useDropdownOptions()
   const mutations = useShotMutations()
+  const { recordSave } = useLastSaved()
 
-  // Optimistic UI state for props field - maps shot.id to optimistic props value
-  // Allows instant typing feedback while mutation saves in background
-  const [optimisticProps, setOptimisticProps] = React.useState<Record<string, string | null>>({})
+  // Track pending mutations per shot to show optimistic UI
+  const [pendingMutations, setPendingMutations] = useState<Record<string, string>>({})
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const debounceTimerRef = useRef<Record<string, any>>({})
 
-  // Group dropdown options by field for easy access
+  // Group dropdown options by field_name for easy access
   const dropdownMap = React.useMemo(() => {
-    const map: Record<string, DropdownOption[]> = {}
+    const map: Record<string, string[]> = {}
     if (dropdownsQuery.data) {
       dropdownsQuery.data.forEach((option) => {
         if (!map[option.field_name]) {
           map[option.field_name] = []
         }
-        map[option.field_name].push(option)
+        map[option.field_name].push(option.option_label)
       })
     }
     return map
@@ -52,47 +64,77 @@ export function ShotTable({ component }: ShotTableProps) {
     mutations.insertShot.mutate({
       scene_id: sceneId,
       shot_number: nextShotNumber,
-      status: 'Not Started',
+    }, {
+      onSuccess: () => recordSave(),
     })
   }
 
   const handleDeleteShot = (id: string) => {
     if (!sceneId) return
     if (confirm('Delete this shot?')) {
-      mutations.deleteShot.mutate({ id, sceneId })
+      mutations.deleteShot.mutate({ id, sceneId }, {
+        onSuccess: () => recordSave(),
+      })
     }
   }
 
-  const handlePropsChange = (shotId: string, newValue: string) => {
-    // Update optimistic state immediately for instant UI feedback
-    const propsValue = newValue || null
-    setOptimisticProps(prev => ({
+  // Handle dropdown/autocomplete field updates (immediate save via mutation)
+  const handleAutocompleteChange = (shotId: string, field: keyof Shot, value: string | null) => {
+    // Prepare update object
+    const updates: Partial<Shot> = {
+      [field]: value,
+    }
+
+    // Clear corresponding "_other" field when switching away from "Other"
+    if (field === 'location_start_point' && value !== 'Other') {
+      updates.location_other = null
+    }
+    if (field === 'subject' && value !== 'Other') {
+      updates.subject_other = null
+    }
+
+    mutations.updateShot.mutate({
+      id: shotId,
+      ...updates,
+    }, {
+      onSuccess: () => recordSave(),
+    })
+  }
+
+  // Handle text field changes with debounced save
+  // This allows local state to update immediately without waiting for mutations
+  const handleTextFieldChange = (shotId: string, field: keyof Shot, value: string) => {
+    // Track this change as pending for optimistic UI
+    setPendingMutations((prev) => ({
       ...prev,
-      [shotId]: propsValue,
+      [`${shotId}-${field}`]: value,
     }))
 
-    // Fire mutation in background - will rollback if fails
-    mutations.updateShot.mutate(
-      { id: shotId, props: propsValue },
-      {
-        onError: () => {
-          // Rollback optimistic state on error
-          setOptimisticProps(prev => {
-            const next = { ...prev }
-            delete next[shotId]
-            return next
-          })
-        },
-      }
-    )
+    // Clear existing timer for this field
+    const timerKey = `${shotId}-${field}`
+    if (debounceTimerRef.current[timerKey]) {
+      clearTimeout(debounceTimerRef.current[timerKey])
+    }
+
+    // Set new timer to save after user stops typing
+    debounceTimerRef.current[timerKey] = setTimeout(() => {
+      mutations.updateShot.mutate({
+        id: shotId,
+        [field]: value || null,
+      }, {
+        onSuccess: () => recordSave(),
+      })
+      delete debounceTimerRef.current[timerKey]
+    }, 500) // Wait 500ms after user stops typing
   }
 
-  // Clear optimistic state when shots refetch (successful mutation)
-  React.useEffect(() => {
-    if (!mutations.updateShot.isPending) {
-      setOptimisticProps({})
+  // Cleanup timers on unmount
+  useEffect(() => {
+    const timersToClean = debounceTimerRef.current
+    return () => {
+      Object.values(timersToClean).forEach(clearTimeout)
     }
-  }, [mutations.updateShot.isPending])
+  }, [])
 
   if (sceneQuery.isLoading || shotsQuery.isLoading) {
     return <div className="shot-table-loading">Loading shots...</div>
@@ -103,14 +145,17 @@ export function ShotTable({ component }: ShotTableProps) {
   }
 
   if (shotsQuery.error) {
-    return <div className="shot-table-error">Error loading shots</div>
+    const errorMessage = shotsQuery.error instanceof Error ? shotsQuery.error.message : 'Unknown error'
+    console.error('[ShotTable] shotsQuery.error:', shotsQuery.error)
+    return <div className="shot-table-error">Error loading shots: {errorMessage}</div>
   }
 
   const shots = shotsQuery.data || []
 
   return (
-    <div className="shot-table-container">
-      <div className="shot-table-header">
+    <DropdownProvider>
+      <div className="shot-table-container">
+        <div className="shot-table-header">
         <h3>Shots for Component {component.component_number}</h3>
         <button className="btn btn-primary" onClick={handleAddShot}>
           + Add Shot
@@ -125,169 +170,116 @@ export function ShotTable({ component }: ShotTableProps) {
             <thead>
               <tr>
                 <th className="col-number">#</th>
-                <th className="col-status">Status</th>
+                <th className="col-shot-type">Shot Type</th>
                 <th className="col-location">Location</th>
+                <th className="col-tracking">Tracking</th>
                 <th className="col-subject">Subject</th>
+                <th className="col-variant">Variant</th>
                 <th className="col-action">Action</th>
-                <th className="col-type">Shot Type</th>
-                <th className="col-intext">Int/Ext</th>
-                <th className="col-actor">Actor?</th>
-                <th className="col-props">Props</th>
                 <th className="col-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {shots.map((shot) => (
-                <tr key={shot.id}>
-                  <td className="col-number">{shot.shot_number}</td>
-                  <td className="col-status">
-                    <select
-                      value={shot.status || ''}
-                      onChange={(e) =>
-                        mutations.updateShot.mutate({
-                          id: shot.id,
-                          status: e.target.value,
-                        })
-                      }
-                      className="form-control"
-                    >
-                      <option value="">Select status</option>
-                      {(dropdownMap['status'] || []).map((opt) => (
-                        <option key={opt.id} value={opt.option_value}>
-                          {opt.option_label}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="col-location">
-                    <select
-                      value={shot.location || ''}
-                      onChange={(e) =>
-                        mutations.updateShot.mutate({
-                          id: shot.id,
-                          location: e.target.value,
-                        })
-                      }
-                      className="form-control"
-                    >
-                      <option value="">Select location</option>
-                      {(dropdownMap['location'] || []).map((opt) => (
-                        <option key={opt.id} value={opt.option_value}>
-                          {opt.option_label}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="col-subject">
-                    <select
-                      value={shot.subject || ''}
-                      onChange={(e) =>
-                        mutations.updateShot.mutate({
-                          id: shot.id,
-                          subject: e.target.value,
-                        })
-                      }
-                      className="form-control"
-                    >
-                      <option value="">Select subject</option>
-                      {(dropdownMap['subject'] || []).map((opt) => (
-                        <option key={opt.id} value={opt.option_value}>
-                          {opt.option_label}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="col-action">
-                    <select
-                      value={shot.action || ''}
-                      onChange={(e) =>
-                        mutations.updateShot.mutate({
-                          id: shot.id,
-                          action: e.target.value,
-                        })
-                      }
-                      className="form-control"
-                    >
-                      <option value="">Select action</option>
-                      {(dropdownMap['action'] || []).map((opt) => (
-                        <option key={opt.id} value={opt.option_value}>
-                          {opt.option_label}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="col-type">
-                    <select
-                      value={shot.shot_type || ''}
-                      onChange={(e) =>
-                        mutations.updateShot.mutate({
-                          id: shot.id,
-                          shot_type: e.target.value,
-                        })
-                      }
-                      className="form-control"
-                    >
-                      <option value="">Select type</option>
-                      {(dropdownMap['shot_type'] || []).map((opt) => (
-                        <option key={opt.id} value={opt.option_value}>
-                          {opt.option_label}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="col-intext">
-                    <select
-                      value={shot.int_ext || ''}
-                      onChange={(e) =>
-                        mutations.updateShot.mutate({
-                          id: shot.id,
-                          int_ext: e.target.value as 'interior' | 'exterior',
-                        })
-                      }
-                      className="form-control"
-                    >
-                      <option value="">—</option>
-                      <option value="interior">Interior</option>
-                      <option value="exterior">Exterior</option>
-                    </select>
-                  </td>
-                  <td className="col-actor">
-                    <input
-                      type="checkbox"
-                      checked={shot.requires_actor || false}
-                      onChange={(e) =>
-                        mutations.updateShot.mutate({
-                          id: shot.id,
-                          requires_actor: e.target.checked,
-                        })
-                      }
-                    />
-                  </td>
-                  <td className="col-props">
-                    <input
-                      type="text"
-                      value={optimisticProps[shot.id] !== undefined ? optimisticProps[shot.id] || '' : shot.props || ''}
-                      onChange={(e) => handlePropsChange(shot.id, e.target.value)}
-                      placeholder="Props"
-                      className="form-control"
-                      title="Edit props - changes save automatically"
-                    />
-                  </td>
-                  <td className="col-actions">
-                    <button
-                      className="btn btn-danger btn-sm"
-                      onClick={() => handleDeleteShot(shot.id)}
-                      title="Delete shot"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
+              {shots.map((shot: Shot) => (
+                <React.Fragment key={shot.id}>
+                  <tr>
+                    {/* Shot Number (read-only) */}
+                    <td className="col-number">{shot.shot_number}</td>
+
+                    {/* shot_type - Fixed list autocomplete (no "Other") */}
+                    <td className="col-shot-type">
+                      <AutocompleteField
+                        value={shot.shot_type || null}
+                        onChange={(value) => handleAutocompleteChange(shot.id, 'shot_type', value)}
+                        options={dropdownMap['shot_type'] || []}
+                        allowOther={false}
+                        placeholder="Select..."
+                        isLoading={dropdownsQuery.isLoading}
+                      />
+                    </td>
+
+                    {/* location_start_point - Flexible list with "Other" */}
+                    <td className="col-location">
+                      <AutocompleteField
+                        value={shot.location_start_point || null}
+                        onChange={(value) => handleAutocompleteChange(shot.id, 'location_start_point', value)}
+                        onOtherChange={(value) => handleAutocompleteChange(shot.id, 'location_other', value)}
+                        options={dropdownMap['location_start_point'] || []}
+                        allowOther={true}
+                        placeholder="Select..."
+                        isLoading={dropdownsQuery.isLoading}
+                        showOtherText={shot.location_start_point === 'Other'}
+                        otherValue={shot.location_other}
+                      />
+                    </td>
+
+                    {/* tracking_type - Fixed list autocomplete (no "Other") */}
+                    <td className="col-tracking">
+                      <AutocompleteField
+                        value={shot.tracking_type || null}
+                        onChange={(value) => handleAutocompleteChange(shot.id, 'tracking_type', value)}
+                        options={dropdownMap['tracking_type'] || []}
+                        allowOther={false}
+                        placeholder="Select..."
+                        isLoading={dropdownsQuery.isLoading}
+                      />
+                    </td>
+
+                    {/* subject - Flexible list with "Other" */}
+                    <td className="col-subject">
+                      <AutocompleteField
+                        value={shot.subject || null}
+                        onChange={(value) => handleAutocompleteChange(shot.id, 'subject', value)}
+                        onOtherChange={(value) => handleAutocompleteChange(shot.id, 'subject_other', value)}
+                        options={dropdownMap['subject'] || []}
+                        allowOther={true}
+                        placeholder="Select..."
+                        isLoading={dropdownsQuery.isLoading}
+                        showOtherText={shot.subject === 'Other'}
+                        otherValue={shot.subject_other}
+                      />
+                    </td>
+
+                    {/* variant - Free text with debounced save */}
+                    <td className="col-variant">
+                      <input
+                        type="text"
+                        value={pendingMutations[`${shot.id}-variant`] ?? shot.variant ?? ''}
+                        onChange={(e) => handleTextFieldChange(shot.id, 'variant', e.target.value)}
+                        placeholder="e.g., front door, siemens"
+                        className="form-control form-control-text"
+                      />
+                    </td>
+
+                    {/* action - Free text with debounced save */}
+                    <td className="col-action">
+                      <input
+                        type="text"
+                        value={pendingMutations[`${shot.id}-action`] ?? shot.action ?? ''}
+                        onChange={(e) => handleTextFieldChange(shot.id, 'action', e.target.value)}
+                        placeholder="e.g., demo, movement"
+                        className="form-control form-control-text"
+                      />
+                    </td>
+
+                    {/* Actions - Delete button */}
+                    <td className="col-actions">
+                      <button
+                        className="btn btn-danger btn-small"
+                        onClick={() => handleDeleteShot(shot.id)}
+                        title="Delete shot"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                </React.Fragment>
               ))}
             </tbody>
           </table>
         </div>
       )}
-    </div>
+      </div>
+    </DropdownProvider>
   )
 }
