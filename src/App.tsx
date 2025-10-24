@@ -4,14 +4,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import '@elevanaltd/ui/dist/index.css'
 import { AuthProvider } from './contexts/AuthContext'
 import { NavigationProvider } from './contexts/NavigationContext'
+import { LastSavedProvider } from './contexts/LastSavedContext'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { PrivateRoute } from './components/auth/PrivateRoute'
 import { Login } from './components/auth/Login'
 import { ScenesNavigationContainer } from './components/ScenesNavigationContainer'
 import { ShotTable } from './components/ShotTable'
-import { Header as HeaderMockup } from './components/HeaderMockup'
+import { Header } from '@elevanaltd/ui'
 import { useNavigation } from './contexts/NavigationContext'
 import { useAuth } from './hooks/useAuth'
+import { useLastSaved } from './contexts/LastSavedContext'
 import { useScriptComponents } from './hooks/useScriptComponents'
 import type { ScriptComponent } from './types'
 
@@ -28,7 +30,8 @@ const queryClient = new QueryClient({
 // Workspace with navigation
 export function ScenesWorkspace() {
   const nav = useNavigation()
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
+  const { lastSaved } = useLastSaved()
   const componentsQuery = useScriptComponents(nav.selectedScript?.id)
   const [expandedComponents, setExpandedComponents] = useState<Set<string>>(new Set())
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -86,10 +89,10 @@ export function ScenesWorkspace() {
 
   return (
     <div className="scenes-workspace">
-      <HeaderMockup
+      <Header
         title="Scene Planning"
-        lastSaved={new Date(Date.now() - 45000)} // 45 seconds ago
-        onLogout={logout}
+        userEmail={user?.email}
+        lastSaved={lastSaved || new Date()}
         onSettings={() => setShowSettingsDemo(!showSettingsDemo)}
       />
       {/* Demo: Settings panel (app-specific content) */}
@@ -208,7 +211,8 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <NavigationProvider>
-            <ErrorBoundary>
+            <LastSavedProvider>
+              <ErrorBoundary>
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route
@@ -221,7 +225,8 @@ function App() {
                 />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
-            </ErrorBoundary>
+              </ErrorBoundary>
+            </LastSavedProvider>
           </NavigationProvider>
         </AuthProvider>
       </BrowserRouter>

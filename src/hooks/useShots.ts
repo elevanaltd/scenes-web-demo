@@ -20,12 +20,15 @@ export function useShots(sceneId: string | undefined) {
       const { data, error } = await (supabase as any)
         .from('shots')
         .select(
-          'id, scene_id, shot_number, shot_type, location_start_point, location_other, tracking_type, subject, subject_other, variant, action, completed, owner_user_id, created_at, updated_at'
+          'id, scene_id, shot_number, shot_type, location_start_point, location_other, tracking_type, subject, subject_other, variant, action, owner_user_id, created_at, updated_at'
         )
         .eq('scene_id', sceneId)
         .order('shot_number', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        console.error('[useShots] Query error:', error.message, error.details, error.hint)
+        throw error
+      }
 
       return (data || []) as Shot[]
     },

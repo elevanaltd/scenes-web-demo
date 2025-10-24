@@ -59,7 +59,8 @@ export interface Shot {
   variant: string | null // Free text: e.g., "front door", "siemens"
   action: string | null // Free text: e.g., "demo", "actor movement"
   // Hidden fields (not shown in UI)
-  completed: boolean | null
+  // Note: 'completed' field replaced with 'shot_status' in database (Phase 3+)
+  completed?: boolean | null
   owner_user_id: string | null
   created_at: string
   updated_at: string

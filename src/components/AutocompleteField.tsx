@@ -43,8 +43,9 @@ export function AutocompleteField({
 }: AutocompleteFieldProps) {
   const { activeDropdownId, setActiveDropdownId } = useDropdown()
 
-  // Generate unique ID for this instance (stable across re-renders)
+  // Generate unique IDs for this instance (stable across re-renders, for ARIA)
   const dropdownId = useMemo(() => Math.random().toString(36).substr(2, 9), [])
+  const listboxId = useMemo(() => `listbox-${dropdownId}`, [dropdownId])
   const isActive = activeDropdownId === dropdownId
 
   const [inputValue, setInputValue] = useState(value || '')
@@ -53,6 +54,7 @@ export function AutocompleteField({
   const [showValidationDialog, setShowValidationDialog] = useState(false)
   const [pendingValue, setPendingValue] = useState<string | null>(null)
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({})
+  const [localOtherValue, setLocalOtherValue] = useState(otherValue || '') // Local state for "Other" text input
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -61,17 +63,39 @@ export function AutocompleteField({
     setInputValue(value || '')
   }, [value])
 
-  // Calculate dropdown position when this dropdown becomes active
+  // Sync otherValue prop changes to local state (for "Other" text input)
   useEffect(() => {
-    if (isActive && inputRef.current) {
-      const rect = inputRef.current.getBoundingClientRect()
-      setDropdownStyle({
-        position: 'fixed',
-        top: `${rect.bottom}px`,
-        left: `${rect.left}px`,
-        right: 'auto',
-        width: `${rect.width}px`,
-      })
+    setLocalOtherValue(otherValue || '')
+  }, [otherValue])
+
+  // Calculate dropdown position when this dropdown becomes active
+  // Re-calculate on scroll/resize to prevent drift
+  useEffect(() => {
+    if (!isActive || !inputRef.current) return
+
+    const updatePosition = () => {
+      if (inputRef.current) {
+        const rect = inputRef.current.getBoundingClientRect()
+        setDropdownStyle({
+          position: 'fixed',
+          top: `${rect.bottom}px`,
+          left: `${rect.left}px`,
+          right: 'auto',
+          width: `${rect.width}px`,
+        })
+      }
+    }
+
+    // Initial position
+    updatePosition()
+
+    // Update position on scroll/resize
+    window.addEventListener('scroll', updatePosition, true) // true = capture phase for all scrolls
+    window.addEventListener('resize', updatePosition)
+
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true)
+      window.removeEventListener('resize', updatePosition)
     }
   }, [isActive])
 
@@ -163,7 +187,15 @@ export function AutocompleteField({
 
   // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!isActive && e.key !== 'Enter') return
+    // Allow ArrowDown/ArrowUp to open dropdown when closed (WCAG 2.1.1 keyboard accessibility)
+    if (!isActive) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault()
+        setActiveDropdownId(dropdownId)
+        return
+      }
+      if (e.key !== 'Enter') return
+    }
 
     switch (e.key) {
       case 'ArrowDown':
@@ -250,6 +282,11 @@ export function AutocompleteField({
         <input
           ref={inputRef}
           type="text"
+          role="combobox"
+          aria-expanded={isActive}
+          aria-controls={listboxId}
+          aria-activedescendant={selectedIndex >= 0 ? `option-${dropdownId}-${selectedIndex}` : undefined}
+          aria-autocomplete="list"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onBlur={handleBlur}
@@ -269,10 +306,16 @@ export function AutocompleteField({
 
       {/* Dropdown suggestions */}
       {isActive && !isLoading && filteredOptions.length > 0 && (
-        <div className="autocomplete-dropdown" style={dropdownStyle}>
+        <div
+          id={listboxId}
+          role="listbox"
+          className="autocomplete-dropdown"
+          style={dropdownStyle}
+        >
           {filteredOptions.map((option, idx) => (
             <div
               key={option}
+              id={`option-${dropdownId}-${idx}`}
               className={`autocomplete-option ${idx === selectedIndex ? 'selected' : ''}`}
               onMouseDown={(e) => {
                 e.preventDefault() // Prevent blur from firing
@@ -289,8 +332,14 @@ export function AutocompleteField({
 
       {/* "Add as Other" suggestion (when typing non-matching value) */}
       {isActive && !isLoading && inputValue.trim() && filteredOptions.length === 0 && allowOther && (
-        <div className="autocomplete-dropdown" style={dropdownStyle}>
+        <div
+          id={listboxId}
+          role="listbox"
+          className="autocomplete-dropdown"
+          style={dropdownStyle}
+        >
           <div
+            id={`option-${dropdownId}-0`}
             className="autocomplete-option add-as-other"
             onMouseDown={(e) => {
               e.preventDefault() // Prevent blur from firing
@@ -298,6 +347,7 @@ export function AutocompleteField({
               setShowValidationDialog(true)
             }}
             role="option"
+            aria-selected={false}
           >
             💡 Add "{inputValue.trim()}" as Other
           </div>
@@ -350,18 +400,18 @@ export function AutocompleteField({
       )}
 
       {/* Conditional "Other" text input (shown when value is "Other") */}
+      {/* Uses local state for optimistic UI - only saves on blur (same pattern as variant/action fields) */}
       {showOtherText && value === 'Other' && (
         <div className="other-text-input-wrapper">
           <input
             type="text"
-            value={otherValue || ''}
+            value={localOtherValue}
             onChange={(e) => {
-              if (onOtherChange) {
-                onOtherChange(e.target.value || null)
-              }
+              // Update local state immediately for smooth typing
+              setLocalOtherValue(e.target.value)
             }}
             onBlur={(e) => {
-              // Auto-save on blur
+              // Auto-save on blur (same pattern as variant/action fields)
               if (onOtherChange) {
                 const finalValue = e.target.value || null
                 onOtherChange(finalValue)

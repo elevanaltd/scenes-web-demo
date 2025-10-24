@@ -9,6 +9,7 @@ const mockUseScene = vi.fn()
 const mockUseShots = vi.fn()
 const mockUseDropdownOptions = vi.fn()
 const mockShotMutations = vi.fn()
+const mockRecordSave = vi.fn()
 
 vi.mock('../hooks/useScene', () => ({
   useScene: (id: string | undefined) => mockUseScene(id),
@@ -24,6 +25,14 @@ vi.mock('../hooks/useDropdownOptions', () => ({
 
 vi.mock('../hooks/useShotMutations', () => ({
   useShotMutations: () => mockShotMutations(),
+}))
+
+vi.mock('../contexts/LastSavedContext', () => ({
+  useLastSaved: () => ({
+    recordSave: mockRecordSave,
+    lastSaved: null,
+    formattedLastSaved: 'Never',
+  }),
 }))
 
 const queryClient = new QueryClient({

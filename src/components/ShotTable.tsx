@@ -4,6 +4,7 @@ import { useShots } from '../hooks/useShots'
 import { useDropdownOptions } from '../hooks/useDropdownOptions'
 import { useShotMutations } from '../hooks/useShotMutations'
 import { DropdownProvider } from '../contexts/DropdownContext'
+import { useLastSaved } from '../contexts/LastSavedContext'
 import type { ScriptComponent, Shot } from '../types'
 import { AutocompleteField } from './AutocompleteField'
 import './ShotTable.css'
@@ -21,7 +22,7 @@ interface ShotTableProps {
  * - 2 hidden fields: completed, owner_user_id
  *
  * Auto-saves on blur (via AutocompleteField component).
- * Conditional rendering of location_other and subject_other when parent is set to "Other".
+ * "Other" text fields (location_other, subject_other) render inline below dropdown when value = "Other".
  *
  * North Star I6: Independent shots table (scene_planning_state association)
  *
@@ -35,6 +36,7 @@ export function ShotTable({ component }: ShotTableProps) {
   const shotsQuery = useShots(sceneId)
   const dropdownsQuery = useDropdownOptions()
   const mutations = useShotMutations()
+  const { recordSave } = useLastSaved()
 
   // Track pending mutations per shot to show optimistic UI
   const [pendingMutations, setPendingMutations] = useState<Record<string, string>>({})
@@ -62,21 +64,40 @@ export function ShotTable({ component }: ShotTableProps) {
     mutations.insertShot.mutate({
       scene_id: sceneId,
       shot_number: nextShotNumber,
+    }, {
+      onSuccess: () => recordSave(),
     })
   }
 
   const handleDeleteShot = (id: string) => {
     if (!sceneId) return
     if (confirm('Delete this shot?')) {
-      mutations.deleteShot.mutate({ id, sceneId })
+      mutations.deleteShot.mutate({ id, sceneId }, {
+        onSuccess: () => recordSave(),
+      })
     }
   }
 
   // Handle dropdown/autocomplete field updates (immediate save via mutation)
   const handleAutocompleteChange = (shotId: string, field: keyof Shot, value: string | null) => {
+    // Prepare update object
+    const updates: Partial<Shot> = {
+      [field]: value,
+    }
+
+    // Clear corresponding "_other" field when switching away from "Other"
+    if (field === 'location_start_point' && value !== 'Other') {
+      updates.location_other = null
+    }
+    if (field === 'subject' && value !== 'Other') {
+      updates.subject_other = null
+    }
+
     mutations.updateShot.mutate({
       id: shotId,
-      [field]: value,
+      ...updates,
+    }, {
+      onSuccess: () => recordSave(),
     })
   }
 
@@ -100,6 +121,8 @@ export function ShotTable({ component }: ShotTableProps) {
       mutations.updateShot.mutate({
         id: shotId,
         [field]: value || null,
+      }, {
+        onSuccess: () => recordSave(),
       })
       delete debounceTimerRef.current[timerKey]
     }, 500) // Wait 500ms after user stops typing
@@ -122,7 +145,9 @@ export function ShotTable({ component }: ShotTableProps) {
   }
 
   if (shotsQuery.error) {
-    return <div className="shot-table-error">Error loading shots</div>
+    const errorMessage = shotsQuery.error instanceof Error ? shotsQuery.error.message : 'Unknown error'
+    console.error('[ShotTable] shotsQuery.error:', shotsQuery.error)
+    return <div className="shot-table-error">Error loading shots: {errorMessage}</div>
   }
 
   const shots = shotsQuery.data || []
@@ -248,44 +273,6 @@ export function ShotTable({ component }: ShotTableProps) {
                       </button>
                     </td>
                   </tr>
-
-                  {/* Conditional row for location_other (shown when location_start_point = "Other") */}
-                  {shot.location_start_point === 'Other' && (
-                    <tr className="conditional-row">
-                      <td colSpan={1}></td>
-                      <td colSpan={1}>
-                        <span className="conditional-label">Location (Other):</span>
-                      </td>
-                      <td colSpan={6}>
-                        <input
-                          type="text"
-                          value={pendingMutations[`${shot.id}-location_other`] ?? shot.location_other ?? ''}
-                          onChange={(e) => handleTextFieldChange(shot.id, 'location_other', e.target.value)}
-                          placeholder="Enter custom location..."
-                          className="form-control form-control-text conditional-input"
-                        />
-                      </td>
-                    </tr>
-                  )}
-
-                  {/* Conditional row for subject_other (shown when subject = "Other") */}
-                  {shot.subject === 'Other' && (
-                    <tr className="conditional-row">
-                      <td colSpan={1}></td>
-                      <td colSpan={1}>
-                        <span className="conditional-label">Subject (Other):</span>
-                      </td>
-                      <td colSpan={6}>
-                        <input
-                          type="text"
-                          value={pendingMutations[`${shot.id}-subject_other`] ?? shot.subject_other ?? ''}
-                          onChange={(e) => handleTextFieldChange(shot.id, 'subject_other', e.target.value)}
-                          placeholder="Enter custom subject..."
-                          className="form-control form-control-text conditional-input"
-                        />
-                      </td>
-                    </tr>
-                  )}
                 </React.Fragment>
               ))}
             </tbody>
