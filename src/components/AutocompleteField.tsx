@@ -55,6 +55,7 @@ export function AutocompleteField({
   const [pendingValue, setPendingValue] = useState<string | null>(null)
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({})
   const [localOtherValue, setLocalOtherValue] = useState(otherValue || '') // Local state for "Other" text input
+  const [userClosedDropdown, setUserClosedDropdown] = useState(false) // Track if user explicitly closed dropdown
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -125,14 +126,14 @@ export function AutocompleteField({
     setFilteredOptions(filtered)
     setSelectedIndex(-1)
 
-    // Open this dropdown if there are options to show
-    if (filtered.length > 0 || inputValue.length > 0) {
+    // Open this dropdown if there are options to show AND user hasn't explicitly closed it
+    if (!userClosedDropdown && (filtered.length > 0 || inputValue.length > 0)) {
       setActiveDropdownId(dropdownId)
-    } else {
+    } else if (filtered.length === 0 && inputValue.length === 0) {
       // Close if no options and no input
       setActiveDropdownId(null)
     }
-  }, [inputValue, options, isLoading, dropdownId, setActiveDropdownId])
+  }, [inputValue, options, isLoading, dropdownId, setActiveDropdownId, userClosedDropdown])
 
   // Close this dropdown when clicking outside
   useEffect(() => {
@@ -233,6 +234,7 @@ export function AutocompleteField({
         setActiveDropdownId(null)
         setInputValue(value || '')
         setSelectedIndex(-1)
+        setUserClosedDropdown(true) // Mark as intentionally closed
         break
 
       default:
@@ -245,6 +247,7 @@ export function AutocompleteField({
     onChange(option)
     setInputValue(option)
     setActiveDropdownId(null)
+    setUserClosedDropdown(true) // Mark as intentionally closed
     setShowValidationDialog(false)
   }
 
@@ -288,9 +291,13 @@ export function AutocompleteField({
           aria-activedescendant={selectedIndex >= 0 ? `option-${dropdownId}-${selectedIndex}` : undefined}
           aria-autocomplete="list"
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          onChange={(e) => {
+            setInputValue(e.target.value)
+            setUserClosedDropdown(false) // Reset flag when user types
+          }}
           onBlur={handleBlur}
           onFocus={() => {
+            setUserClosedDropdown(false) // Reset flag when user focuses
             if (filteredOptions.length > 0 || inputValue.length > 0) {
               setActiveDropdownId(dropdownId)
             }
