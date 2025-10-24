@@ -20,8 +20,8 @@
     "db:update": "npm run supabase:pull && npm run supabase:types"
   },
   "dependencies": {
-    "@elevanaltd/shared-lib": "^0.1.8",
-    "@elevanaltd/ui": "^0.3.0",
+    "@elevanaltd/shared-lib": "^0.2.0",
+    "@elevanaltd/ui": "^0.4.0",
     "@supabase/supabase-js": "^2.76.1",
     "@tanstack/react-query": "^5.90.2",
     "react": "^18.3.1",

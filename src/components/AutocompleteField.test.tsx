@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, cleanup, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { AutocompleteField } from './AutocompleteField'
-import { DropdownProvider } from '../contexts/DropdownContext'
+import { AutocompleteField, DropdownProvider } from '@elevanaltd/ui'
+import '@elevanaltd/ui/dist/index.css'
 
 const mockOptions = ['WS', 'MID', 'CU', 'FP', 'OBJ-L', 'OBJ-R', 'UNDER']
 
