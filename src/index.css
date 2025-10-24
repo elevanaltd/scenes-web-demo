@@ -119,55 +119,7 @@ input, select, textarea {
   overflow: hidden; /* Prevent window scroll */
 }
 
-/* App Header - fixed positioning like scripts-web */
-.app-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  border-bottom: 1px solid #ddd;
-  padding: 12px 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 64px;
-  flex-shrink: 0;
-  z-index: 1000;
-}
-
-.header-left h1 {
-  margin: 0;
-  font-size: 18px;
-  color: #333;
-  font-weight: 600;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.user-email {
-  font-size: 13px;
-  color: #666;
-}
-
-.logout-btn {
-  padding: 6px 16px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.logout-btn:hover {
-  background: #1d4ed8;
-}
+/* Header styles moved to @elevanaltd/ui/Header component */
 
 .loading {
   display: flex;

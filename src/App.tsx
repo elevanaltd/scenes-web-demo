@@ -9,6 +9,7 @@ import { PrivateRoute } from './components/auth/PrivateRoute'
 import { Login } from './components/auth/Login'
 import { ScenesNavigationContainer } from './components/ScenesNavigationContainer'
 import { ShotTable } from './components/ShotTable'
+import { Header as HeaderMockup } from './components/HeaderMockup'
 import { useNavigation } from './contexts/NavigationContext'
 import { useAuth } from './hooks/useAuth'
 import { useScriptComponents } from './hooks/useScriptComponents'
@@ -81,19 +82,48 @@ export function ScenesWorkspace() {
     }
   }, [expandedComponents])
 
+  const [showSettingsDemo, setShowSettingsDemo] = useState(false)
+
   return (
     <div className="scenes-workspace">
-      <header className="app-header">
-        <div className="header-left">
-          <h1>EAV Orchestrator</h1>
-        </div>
-        <div className="header-right">
-          <span className="user-email">shaun.buswell@elevana.com</span>
-          <button className="logout-btn" onClick={logout} type="button">
+      <HeaderMockup
+        title="Scene Planning"
+        lastSaved={new Date(Date.now() - 45000)} // 45 seconds ago
+        onLogout={logout}
+        onSettings={() => setShowSettingsDemo(!showSettingsDemo)}
+      />
+      {/* Demo: Settings panel (app-specific content) */}
+      {showSettingsDemo && (
+        <div style={{
+          position: 'fixed',
+          top: '64px',
+          right: '16px',
+          background: 'white',
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
+          padding: '12px',
+          minWidth: '200px',
+          zIndex: 999,
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+        }}>
+          <div style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #f0f0f0' }}>
+            <h4 style={{ margin: '0 0 4px 0', fontSize: '14px' }}>Settings</h4>
+            <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>App-specific content</p>
+          </div>
+          <button onClick={logout} style={{
+            width: '100%',
+            padding: '8px',
+            background: '#ef4444',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}>
             Logout
           </button>
         </div>
-      </header>
+      )}
       <div className="app-layout">
         <ScenesNavigationContainer
           onComponentSelected={(componentId) => {
