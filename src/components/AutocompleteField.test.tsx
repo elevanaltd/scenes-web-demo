@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { render, screen, cleanup, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { AutocompleteField } from './AutocompleteField'
-import { DropdownProvider } from '../contexts/DropdownContext'
+import { AutocompleteField, DropdownProvider } from '@elevanaltd/ui'
+import '@elevanaltd/ui/dist/index.css'
 
 const mockOptions = ['WS', 'MID', 'CU', 'FP', 'OBJ-L', 'OBJ-R', 'UNDER']
 
@@ -18,6 +18,10 @@ describe('AutocompleteField', () => {
   beforeEach(() => {
     onChange = vi.fn()
     onOtherChange = vi.fn()
+  })
+
+  afterEach(() => {
+    cleanup()
   })
 
   describe('Basic Input & Filtering', () => {
@@ -481,26 +485,122 @@ describe('AutocompleteField', () => {
       expect(combobox).toHaveAttribute('aria-autocomplete', 'list')
     })
 
-    it('updates aria-expanded when dropdown opens', async () => {
+    it('sets aria-expanded=false initially when no input and no filtering', () => {
+      renderWithDropdown(
+        <AutocompleteField
+          value={null}
+          onChange={onChange}
+          options={[]}  // No options
+          allowOther={false}
+        />
+      )
+
+      const combobox = screen.getByRole('combobox')
+
+      // Verify closed state when no content to show
+      expect(combobox).toHaveAttribute('aria-expanded', 'false')
+    })
+
+    it('sets aria-expanded=true when dropdown opens via typing and options match', async () => {
       const user = userEvent.setup()
       renderWithDropdown(
         <AutocompleteField
           value={null}
           onChange={onChange}
-          options={[]}
+          options={mockOptions}
           allowOther={false}
-          isLoading={true}
         />
       )
 
       const combobox = screen.getByRole('combobox')
-      expect(combobox).toHaveAttribute('aria-expanded', 'false')
 
-      // Type to open dropdown (need to provide options for dropdown to show)
-      await user.type(combobox, 'test')
-      // With isLoading=true and no options, dropdown won't open
-      // So let's just verify aria-expanded updates when we remove loading
-      expect(combobox).toHaveAttribute('aria-expanded', 'false')
+      // Type to open dropdown with matching options
+      await user.type(combobox, 'W')
+
+      // Verify dropdown opened
+      expect(combobox).toHaveAttribute('aria-expanded', 'true')
+      expect(screen.getByRole('listbox')).toBeInTheDocument()
+    })
+
+    it('maintains aria-expanded=true while navigating with keyboard', async () => {
+      const user = userEvent.setup()
+      renderWithDropdown(
+        <AutocompleteField
+          value={null}
+          onChange={onChange}
+          options={mockOptions}
+          allowOther={false}
+        />
+      )
+
+      const combobox = screen.getByRole('combobox')
+
+      // Open dropdown by typing
+      await user.type(combobox, 'O')
+      expect(combobox).toHaveAttribute('aria-expanded', 'true')
+
+      // Navigate with ArrowDown
+      await user.keyboard('{ArrowDown}')
+
+      // Dropdown should remain open during keyboard navigation
+      expect(combobox).toHaveAttribute('aria-expanded', 'true')
+      const options = screen.getAllByRole('option')
+      expect(options[0]).toHaveClass('selected')
+    })
+
+    it('sets aria-expanded=false when dropdown closes via Escape key', async () => {
+      const user = userEvent.setup()
+      renderWithDropdown(
+        <AutocompleteField
+          value={null}
+          onChange={onChange}
+          options={mockOptions}
+          allowOther={false}
+        />
+      )
+
+      const combobox = screen.getByRole('combobox')
+
+      // Open dropdown
+      await user.type(combobox, 'W')
+      expect(combobox).toHaveAttribute('aria-expanded', 'true')
+
+      // Close dropdown with Escape
+      await user.keyboard('{Escape}')
+
+      // Wait for React state updates to propagate
+      await waitFor(() => {
+        expect(combobox).toHaveAttribute('aria-expanded', 'false')
+      })
+      expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+    })
+
+    it('sets aria-expanded=false when dropdown closes via selection', async () => {
+      const user = userEvent.setup()
+      renderWithDropdown(
+        <AutocompleteField
+          value={null}
+          onChange={onChange}
+          options={mockOptions}
+          allowOther={false}
+        />
+      )
+
+      const combobox = screen.getByRole('combobox')
+
+      // Open dropdown
+      await user.type(combobox, 'W')
+      expect(combobox).toHaveAttribute('aria-expanded', 'true')
+
+      // Select an option
+      const option = screen.getByText('WS')
+      await user.click(option)
+
+      // Wait for React state updates to propagate
+      await waitFor(() => {
+        expect(combobox).toHaveAttribute('aria-expanded', 'false')
+      })
+      expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
     })
 
     it('listbox has proper ARIA role and ID', async () => {

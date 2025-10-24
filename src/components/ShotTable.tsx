@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useScene } from '../hooks/useScene'
 import { useShots } from '../hooks/useShots'
-import { useDropdownOptions } from '../hooks/useDropdownOptions'
+import { useDropdownOptions } from '@elevanaltd/shared-lib'
 import { useShotMutations } from '../hooks/useShotMutations'
-import { DropdownProvider } from '../contexts/DropdownContext'
+import { DropdownProvider, AutocompleteField } from '@elevanaltd/ui'
+import '@elevanaltd/ui/dist/index.css'
 import { useLastSaved } from '../contexts/LastSavedContext'
+import { supabase } from '../lib/supabase'
 import type { ScriptComponent, Shot } from '../types'
-import { AutocompleteField } from './AutocompleteField'
 import './ShotTable.css'
 
 interface ShotTableProps {
@@ -34,7 +35,7 @@ export function ShotTable({ component }: ShotTableProps) {
   const sceneId = sceneQuery.data?.id
 
   const shotsQuery = useShots(sceneId)
-  const dropdownsQuery = useDropdownOptions()
+  const dropdownsQuery = useDropdownOptions(undefined, supabase)
   const mutations = useShotMutations()
   const { recordSave } = useLastSaved()
 
