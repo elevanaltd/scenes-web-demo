@@ -20,7 +20,7 @@ vi.mock('../hooks/useShots', () => ({
 }))
 
 vi.mock('../hooks/useDropdownOptions', () => ({
-  useDropdownOptions: (field?: string) => mockUseDropdownOptions(field),
+  useDropdownOptions: (field?: string, _client?: unknown) => mockUseDropdownOptions(field),
 }))
 
 vi.mock('../hooks/useShotMutations', () => ({

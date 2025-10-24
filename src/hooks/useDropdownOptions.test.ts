@@ -3,14 +3,12 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 import { useDropdownOptions } from './useDropdownOptions'
-import * as supabaseLib from '../lib/supabase'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
+const mockFrom = vi.fn()
 const mockSupabase = {
-  from: vi.fn(),
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-vi.spyOn(supabaseLib, 'getSupabaseClient').mockReturnValue(mockSupabase as any)
+  from: mockFrom,
+} as unknown as SupabaseClient
 
 // Create wrapper with fresh QueryClient for each test
 const createWrapper = () => {
@@ -45,11 +43,11 @@ describe('useDropdownOptions', () => {
       eq: mockEq,
     })
 
-    mockSupabase.from.mockReturnValue({
+    mockFrom.mockReturnValue({
       select: mockSelect,
     })
 
-    const { result } = renderHook(() => useDropdownOptions('shot_type'), { wrapper: createWrapper() })
+    const { result } = renderHook(() => useDropdownOptions('shot_type', mockSupabase), { wrapper: createWrapper() })
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -73,11 +71,11 @@ describe('useDropdownOptions', () => {
       order: mockOrder,
     })
 
-    mockSupabase.from.mockReturnValue({
+    mockFrom.mockReturnValue({
       select: mockSelect,
     })
 
-    const { result } = renderHook(() => useDropdownOptions(), { wrapper: createWrapper() })
+    const { result } = renderHook(() => useDropdownOptions(undefined, mockSupabase), { wrapper: createWrapper() })
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -98,11 +96,11 @@ describe('useDropdownOptions', () => {
       order: mockOrder,
     })
 
-    mockSupabase.from.mockReturnValue({
+    mockFrom.mockReturnValue({
       select: mockSelect,
     })
 
-    const { result } = renderHook(() => useDropdownOptions('shot_type'), { wrapper: createWrapper() })
+    const { result } = renderHook(() => useDropdownOptions('shot_type', mockSupabase), { wrapper: createWrapper() })
 
     await waitFor(() => {
       expect(result.current.isError).toBe(true)
@@ -129,11 +127,11 @@ describe('useDropdownOptions', () => {
       eq: mockEq,
     })
 
-    mockSupabase.from.mockReturnValue({
+    mockFrom.mockReturnValue({
       select: mockSelect,
     })
 
-    const { result } = renderHook(() => useDropdownOptions('shot_type'), { wrapper: createWrapper() })
+    const { result } = renderHook(() => useDropdownOptions('shot_type', mockSupabase), { wrapper: createWrapper() })
 
     // Initially loading
     expect(result.current.isLoading).toBe(true)
@@ -167,11 +165,11 @@ describe('useDropdownOptions', () => {
       eq: mockEq,
     })
 
-    mockSupabase.from.mockReturnValue({
+    mockFrom.mockReturnValue({
       select: mockSelect,
     })
 
-    const { result } = renderHook(() => useDropdownOptions('shot_type'), { wrapper: createWrapper() })
+    const { result } = renderHook(() => useDropdownOptions('shot_type', mockSupabase), { wrapper: createWrapper() })
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -192,11 +190,11 @@ describe('useDropdownOptions', () => {
       order: mockOrder,
     })
 
-    mockSupabase.from.mockReturnValue({
+    mockFrom.mockReturnValue({
       select: mockSelect,
     })
 
-    const { result } = renderHook(() => useDropdownOptions(undefined), { wrapper: createWrapper() })
+    const { result } = renderHook(() => useDropdownOptions(undefined, mockSupabase), { wrapper: createWrapper() })
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -220,11 +218,11 @@ describe('useDropdownOptions', () => {
       eq: mockEq,
     })
 
-    mockSupabase.from.mockReturnValue({
+    mockFrom.mockReturnValue({
       select: mockSelect,
     })
 
-    const { result } = renderHook(() => useDropdownOptions('shot_type'), { wrapper: createWrapper() })
+    const { result } = renderHook(() => useDropdownOptions('shot_type', mockSupabase), { wrapper: createWrapper() })
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)

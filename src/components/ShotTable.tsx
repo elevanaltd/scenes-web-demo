@@ -5,6 +5,7 @@ import { useDropdownOptions } from '../hooks/useDropdownOptions'
 import { useShotMutations } from '../hooks/useShotMutations'
 import { DropdownProvider } from '../contexts/DropdownContext'
 import { useLastSaved } from '../contexts/LastSavedContext'
+import { supabase } from '../lib/supabase'
 import type { ScriptComponent, Shot } from '../types'
 import { AutocompleteField } from './AutocompleteField'
 import './ShotTable.css'
@@ -34,7 +35,7 @@ export function ShotTable({ component }: ShotTableProps) {
   const sceneId = sceneQuery.data?.id
 
   const shotsQuery = useShots(sceneId)
-  const dropdownsQuery = useDropdownOptions()
+  const dropdownsQuery = useDropdownOptions(undefined, supabase)
   const mutations = useShotMutations()
   const { recordSave } = useLastSaved()
 

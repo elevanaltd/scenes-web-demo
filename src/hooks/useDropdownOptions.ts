@@ -1,21 +1,25 @@
 import { useQuery } from '@tanstack/react-query'
-import { getSupabaseClient } from '../lib/supabase'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import type { DropdownOption } from '../types'
 
 /**
  * Fetch dropdown options for shot fields
  * Can filter by specific field_name or fetch all options
+ *
+ * @param fieldName - Optional field name to filter options
+ * @param supabaseClient - Injected Supabase client instance (enables app-agnostic usage)
  */
-export function useDropdownOptions(fieldName?: DropdownOption['field_name']) {
+export function useDropdownOptions(
+  fieldName: DropdownOption['field_name'] | undefined,
+  supabaseClient: SupabaseClient
+) {
   return useQuery({
     queryKey: ['dropdownOptions', fieldName],
     queryFn: async () => {
-      const supabase = getSupabaseClient()
-
       // Note: dropdown_options table exists in database but not in shared-lib types yet
       // Using type assertion until types are regenerated
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query = (supabase as any)
+      let query = (supabaseClient as any)
         .from('dropdown_options')
         .select('id, field_name, option_value, option_label, sort_order, created_at')
 
