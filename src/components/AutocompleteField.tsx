@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useDropdown } from '../contexts/DropdownContext'
 import './AutocompleteField.css'
 
@@ -43,9 +43,9 @@ export function AutocompleteField({
 }: AutocompleteFieldProps) {
   const { activeDropdownId, setActiveDropdownId } = useDropdown()
 
-  // Generate unique IDs for this instance (stable across re-renders, for ARIA)
-  const dropdownId = useMemo(() => Math.random().toString(36).substr(2, 9), [])
-  const listboxId = useMemo(() => `listbox-${dropdownId}`, [dropdownId])
+  // Generate unique IDs for this instance (SSR-safe, deterministic, ARIA-compliant)
+  const dropdownId = React.useId()
+  const listboxId = `listbox-${dropdownId}`
   const isActive = activeDropdownId === dropdownId
 
   const [inputValue, setInputValue] = useState(value || '')
