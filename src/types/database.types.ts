@@ -349,6 +349,7 @@ export type Database = {
           id: string
           location_other: string | null
           location_start_point: string | null
+          movement_type: string | null
           owner_user_id: string | null
           script_component_id: string
           shot_number: number
@@ -356,7 +357,6 @@ export type Database = {
           shot_type: string | null
           subject: string | null
           subject_other: string | null
-          tracking_type: string | null
           updated_at: string | null
           variant: string | null
         }
@@ -366,6 +366,7 @@ export type Database = {
           id?: string
           location_other?: string | null
           location_start_point?: string | null
+          movement_type?: string | null
           owner_user_id?: string | null
           script_component_id: string
           shot_number: number
@@ -373,7 +374,6 @@ export type Database = {
           shot_type?: string | null
           subject?: string | null
           subject_other?: string | null
-          tracking_type?: string | null
           updated_at?: string | null
           variant?: string | null
         }
@@ -383,6 +383,7 @@ export type Database = {
           id?: string
           location_other?: string | null
           location_start_point?: string | null
+          movement_type?: string | null
           owner_user_id?: string | null
           script_component_id?: string
           shot_number?: number
@@ -390,7 +391,6 @@ export type Database = {
           shot_type?: string | null
           subject?: string | null
           subject_other?: string | null
-          tracking_type?: string | null
           updated_at?: string | null
           variant?: string | null
         }
