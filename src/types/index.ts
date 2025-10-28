@@ -47,7 +47,7 @@ export interface Scene {
 
 export interface Shot {
   id: string
-  scene_id: string
+  script_component_id: string
   shot_number: number
   // User-facing fields (8 total)
   shot_type: string | null // Dropdown: WS, MID, CU, FP, OBJ-L, OBJ-R, UNDER (no "Other")

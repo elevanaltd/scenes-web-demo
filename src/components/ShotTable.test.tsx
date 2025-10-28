@@ -5,15 +5,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ShotTable } from './ShotTable'
 import type { ScriptComponent, Shot } from '../types'
 
-const mockUseScene = vi.fn()
 const mockUseShots = vi.fn()
 const mockUseDropdownOptions = vi.fn()
 const mockShotMutations = vi.fn()
 const mockRecordSave = vi.fn()
-
-vi.mock('../hooks/useScene', () => ({
-  useScene: (id: string | undefined) => mockUseScene(id),
-}))
 
 vi.mock('../hooks/useShots', () => ({
   useShots: (id: string | undefined) => mockUseShots(id),
@@ -55,7 +50,7 @@ describe('ShotTable', () => {
   const mockShots: Shot[] = [
     {
       id: '1',
-      scene_id: 'scene1',
+      script_component_id: 'scene1',
       shot_number: 1,
       shot_type: 'WS',
       location_start_point: 'Standard',
@@ -77,12 +72,6 @@ describe('ShotTable', () => {
   })
 
   it('should display loading state when shots are loading', () => {
-    mockUseScene.mockReturnValue({
-      data: { id: 'scene1', script_component_id: 'comp1', created_at: '2025-01-01', updated_at: '2025-01-01' },
-      isLoading: false,
-      error: null,
-    })
-
     mockUseShots.mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -107,12 +96,6 @@ describe('ShotTable', () => {
   })
 
   it('should display shots table when data loaded', () => {
-    mockUseScene.mockReturnValue({
-      data: { id: 'scene1', script_component_id: 'comp1', created_at: '2025-01-01', updated_at: '2025-01-01' },
-      isLoading: false,
-      error: null,
-    })
-
     mockUseShots.mockReturnValue({
       data: mockShots,
       isLoading: false,
@@ -149,12 +132,6 @@ describe('ShotTable', () => {
   })
 
   it('should display empty state when no shots', () => {
-    mockUseScene.mockReturnValue({
-      data: { id: 'scene1', script_component_id: 'comp1', created_at: '2025-01-01', updated_at: '2025-01-01' },
-      isLoading: false,
-      error: null,
-    })
-
     mockUseShots.mockReturnValue({
       data: [],
       isLoading: false,

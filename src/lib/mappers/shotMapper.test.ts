@@ -5,7 +5,7 @@ describe('shotMapper', () => {
   it('should convert database row to Shot domain type', () => {
     const row = {
       id: 'shot-1',
-      scene_id: 'scene-1',
+      script_component_id: 'component-1',
       shot_number: 1,
       shot_type: 'WS',
       location_start_point: 'Standard',
@@ -24,7 +24,7 @@ describe('shotMapper', () => {
     const shot = mapShotRowToShot(row)
 
     expect(shot.id).toBe('shot-1')
-    expect(shot.scene_id).toBe('scene-1')
+    expect(shot.script_component_id).toBe('component-1')
     expect(shot.shot_number).toBe(1)
     expect(shot.shot_type).toBe('WS')
     expect(shot.location_start_point).toBe('Standard')
@@ -33,7 +33,7 @@ describe('shotMapper', () => {
   it('should convert null fields to null', () => {
     const row = {
       id: 'shot-1',
-      scene_id: 'scene-1',
+      script_component_id: 'component-1',
       shot_number: 1,
       shot_type: undefined,
       location_start_point: undefined,

@@ -28,7 +28,7 @@ describe('useShotMutations', () => {
     mockSupabase.from.mockReturnValue({
       insert: vi.fn().mockReturnValue({
         select: vi.fn().mockResolvedValue({
-          data: [{ id: '1', scene_id: 'sc1', shot_number: 1 }],
+          data: [{ id: '1', script_component_id: 'comp1', shot_number: 1 }],
           error: null,
         }),
       }),

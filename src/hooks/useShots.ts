@@ -3,16 +3,17 @@ import { getSupabaseClient } from '../lib/supabase'
 import type { Shot } from '../types'
 
 /**
- * Fetch shots for a specific scene (which maps to a script_component)
+ * Fetch shots for a specific script component
  * Ordered by shot_number for sequential display
  *
- * TODO: Phase 3 - Fix Supabase type definitions to include shots and dropdown_options tables
+ * NOTE: Post-migration from scene_planning_state - now uses direct FK
+ * shots.script_component_id → script_components.id
  */
-export function useShots(sceneId: string | undefined) {
+export function useShots(scriptComponentId: string | undefined) {
   return useQuery({
-    queryKey: ['shots', sceneId],
+    queryKey: ['shots', scriptComponentId],
     queryFn: async () => {
-      if (!sceneId) return []
+      if (!scriptComponentId) return []
 
       const supabase = getSupabaseClient()
 
@@ -20,9 +21,9 @@ export function useShots(sceneId: string | undefined) {
       const { data, error } = await (supabase as any)
         .from('shots')
         .select(
-          'id, scene_id, shot_number, shot_type, location_start_point, location_other, tracking_type, subject, subject_other, variant, action, owner_user_id, created_at, updated_at'
+          'id, script_component_id, shot_number, shot_type, location_start_point, location_other, tracking_type, subject, subject_other, variant, action, owner_user_id, created_at, updated_at'
         )
-        .eq('scene_id', sceneId)
+        .eq('script_component_id', scriptComponentId)
         .order('shot_number', { ascending: true })
 
       if (error) {
@@ -32,6 +33,6 @@ export function useShots(sceneId: string | undefined) {
 
       return (data || []) as Shot[]
     },
-    enabled: !!sceneId,
+    enabled: !!scriptComponentId,
   })
 }
