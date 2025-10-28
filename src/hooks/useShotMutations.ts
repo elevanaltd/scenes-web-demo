@@ -8,7 +8,7 @@ interface InsertShotInput {
   shot_type?: string | null
   location_start_point?: string | null
   location_other?: string | null
-  tracking_type?: string | null
+  movement_type?: string | null
   subject?: string | null
   subject_other?: string | null
   variant?: string | null
