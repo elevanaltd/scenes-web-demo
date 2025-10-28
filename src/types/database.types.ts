@@ -220,35 +220,6 @@ export type Database = {
         }
         Relationships: []
       }
-      scene_planning_state: {
-        Row: {
-          created_at: string | null
-          id: string
-          script_component_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          script_component_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          script_component_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "scene_planning_state_script_component_id_fkey"
-            columns: ["script_component_id"]
-            isOneToOne: true
-            referencedRelation: "script_components"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       script_components: {
         Row: {
           component_number: number
@@ -286,6 +257,45 @@ export type Database = {
             foreignKeyName: "script_components_script_id_fkey"
             columns: ["script_id"]
             isOneToOne: false
+            referencedRelation: "scripts_with_eav"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      script_locks: {
+        Row: {
+          is_manual_unlock: boolean | null
+          last_heartbeat: string
+          locked_at: string
+          locked_by: string
+          script_id: string
+        }
+        Insert: {
+          is_manual_unlock?: boolean | null
+          last_heartbeat?: string
+          locked_at?: string
+          locked_by: string
+          script_id: string
+        }
+        Update: {
+          is_manual_unlock?: boolean | null
+          last_heartbeat?: string
+          locked_at?: string
+          locked_by?: string
+          script_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "script_locks_script_id_fkey"
+            columns: ["script_id"]
+            isOneToOne: true
+            referencedRelation: "scripts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "script_locks_script_id_fkey"
+            columns: ["script_id"]
+            isOneToOne: true
             referencedRelation: "scripts_with_eav"
             referencedColumns: ["id"]
           },
@@ -340,7 +350,7 @@ export type Database = {
           location_other: string | null
           location_start_point: string | null
           owner_user_id: string | null
-          scene_id: string
+          script_component_id: string
           shot_number: number
           shot_status: string | null
           shot_type: string | null
@@ -357,7 +367,7 @@ export type Database = {
           location_other?: string | null
           location_start_point?: string | null
           owner_user_id?: string | null
-          scene_id: string
+          script_component_id: string
           shot_number: number
           shot_status?: string | null
           shot_type?: string | null
@@ -374,7 +384,7 @@ export type Database = {
           location_other?: string | null
           location_start_point?: string | null
           owner_user_id?: string | null
-          scene_id?: string
+          script_component_id?: string
           shot_number?: number
           shot_status?: string | null
           shot_type?: string | null
@@ -386,10 +396,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "shots_scene_id_fkey"
-            columns: ["scene_id"]
+            foreignKeyName: "shots_script_component_id_fkey"
+            columns: ["script_component_id"]
             isOneToOne: false
-            referencedRelation: "scene_planning_state"
+            referencedRelation: "script_components"
             referencedColumns: ["id"]
           },
         ]
@@ -525,6 +535,15 @@ export type Database = {
       }
     }
     Functions: {
+      acquire_script_lock: {
+        Args: { p_script_id: string }
+        Returns: {
+          locked_at: string
+          locked_by_name: string
+          locked_by_user_id: string
+          success: boolean
+        }[]
+      }
       cascade_soft_delete_comments: {
         Args: { comment_ids: string[] }
         Returns: {
@@ -541,6 +560,7 @@ export type Database = {
           current_user_role: string
         }[]
       }
+      cleanup_expired_locks: { Args: never; Returns: number }
       get_comment_descendants: {
         Args: { parent_id: string }
         Returns: {

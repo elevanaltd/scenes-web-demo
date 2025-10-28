@@ -3,13 +3,15 @@
  *
  * Converts database rows to domain types.
  * Ensures type safety and null→undefined conversion for UI compatibility.
+ *
+ * NOTE: Post-migration from scene_planning_state - now uses script_component_id
  */
 
 import { Shot } from '../../types'
 
 interface ShotRow {
   id: string
-  scene_id: string
+  script_component_id: string
   shot_number: number
   shot_type?: string | null
   location_start_point?: string | null
@@ -28,7 +30,7 @@ interface ShotRow {
 export function mapShotRowToShot(row: ShotRow): Shot {
   return {
     id: row.id,
-    scene_id: row.scene_id,
+    script_component_id: row.script_component_id,
     shot_number: row.shot_number,
     shot_type: row.shot_type ?? null,
     location_start_point: row.location_start_point ?? null,

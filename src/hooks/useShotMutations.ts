@@ -3,7 +3,7 @@ import { getSupabaseClient } from '../lib/supabase'
 import type { Shot } from '../types'
 
 interface InsertShotInput {
-  scene_id: string
+  script_component_id: string
   shot_number: number
   shot_type?: string | null
   location_start_point?: string | null
@@ -25,7 +25,8 @@ interface UpdateShotInput extends Partial<InsertShotInput> {
  * Mutations for shot table operations
  * Invalidates shots query after mutations to trigger refetch
  *
- * TODO: Phase 3 - Fix Supabase type definitions to include shots and dropdown_options tables
+ * NOTE: Post-migration from scene_planning_state - now uses direct FK
+ * shots.script_component_id → script_components.id
  */
 export function useShotMutations() {
   const queryClient = useQueryClient()
@@ -45,9 +46,9 @@ export function useShotMutations() {
       return data?.[0] as Shot
     },
     onSuccess: (newShot) => {
-      // Invalidate shots query for the scene to refetch
+      // Invalidate shots query for the script component to refetch
       queryClient.invalidateQueries({
-        queryKey: ['shots', newShot.scene_id],
+        queryKey: ['shots', newShot.script_component_id],
       })
     },
   })
@@ -69,15 +70,15 @@ export function useShotMutations() {
       return data?.[0] as Shot
     },
     onSuccess: (updatedShot) => {
-      // Invalidate shots query for the scene
+      // Invalidate shots query for the script component
       queryClient.invalidateQueries({
-        queryKey: ['shots', updatedShot.scene_id],
+        queryKey: ['shots', updatedShot.script_component_id],
       })
     },
   })
 
   const deleteShot = useMutation({
-    mutationFn: async ({ id, sceneId }: { id: string; sceneId: string }) => {
+    mutationFn: async ({ id, scriptComponentId }: { id: string; scriptComponentId: string }) => {
       const supabase = getSupabaseClient()
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -85,12 +86,12 @@ export function useShotMutations() {
 
       if (error) throw error
 
-      return { id, sceneId }
+      return { id, scriptComponentId }
     },
     onSuccess: (result) => {
-      // Invalidate shots query for the scene
+      // Invalidate shots query for the script component
       queryClient.invalidateQueries({
-        queryKey: ['shots', result.sceneId],
+        queryKey: ['shots', result.scriptComponentId],
       })
     },
   })
