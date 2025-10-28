@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useScene } from '../hooks/useScene'
 import { useShots } from '../hooks/useShots'
 import { useDropdownOptions } from '@elevanaltd/shared-lib'
 import { useShotMutations } from '../hooks/useShotMutations'
@@ -25,16 +24,13 @@ interface ShotTableProps {
  * Auto-saves on blur (via AutocompleteField component).
  * "Other" text fields (location_other, subject_other) render inline below dropdown when value = "Other".
  *
- * North Star I6: Independent shots table (scene_planning_state association)
+ * NOTE: Post-migration from scene_planning_state - shots now directly reference script_component_id
  *
  * Performance optimization: Text fields use local state + debounced blur saves.
  * This prevents character loss from rapid mutations interfering with input rendering.
  */
 export function ShotTable({ component }: ShotTableProps) {
-  const sceneQuery = useScene(component.id)
-  const sceneId = sceneQuery.data?.id
-
-  const shotsQuery = useShots(sceneId)
+  const shotsQuery = useShots(component.id)
   const dropdownsQuery = useDropdownOptions(undefined, supabase)
   const mutations = useShotMutations()
   const { recordSave } = useLastSaved()
@@ -59,11 +55,10 @@ export function ShotTable({ component }: ShotTableProps) {
   }, [dropdownsQuery.data])
 
   const handleAddShot = () => {
-    if (!sceneId) return
     const nextShotNumber = (shotsQuery.data?.length || 0) + 1
 
     mutations.insertShot.mutate({
-      scene_id: sceneId,
+      script_component_id: component.id,
       shot_number: nextShotNumber,
     }, {
       onSuccess: () => recordSave(),
@@ -71,9 +66,8 @@ export function ShotTable({ component }: ShotTableProps) {
   }
 
   const handleDeleteShot = (id: string) => {
-    if (!sceneId) return
     if (confirm('Delete this shot?')) {
-      mutations.deleteShot.mutate({ id, sceneId }, {
+      mutations.deleteShot.mutate({ id, scriptComponentId: component.id }, {
         onSuccess: () => recordSave(),
       })
     }
@@ -137,12 +131,8 @@ export function ShotTable({ component }: ShotTableProps) {
     }
   }, [])
 
-  if (sceneQuery.isLoading || shotsQuery.isLoading) {
+  if (shotsQuery.isLoading) {
     return <div className="shot-table-loading">Loading shots...</div>
-  }
-
-  if (sceneQuery.error) {
-    return <div className="shot-table-error">Error creating/loading scene</div>
   }
 
   if (shotsQuery.error) {
