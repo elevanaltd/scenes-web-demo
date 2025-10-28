@@ -24,11 +24,11 @@ describe('useShots', () => {
     vi.clearAllMocks()
   })
 
-  it('should fetch shots for selected scene', async () => {
+  it('should fetch shots for selected script component', async () => {
     const mockShots = [
       {
         id: '1',
-        scene_id: 'sc1',
+        script_component_id: 'comp1',
         shot_number: 1,
         status: 'Not Started',
         location: 'EXT-BUILDING',
@@ -62,7 +62,7 @@ describe('useShots', () => {
       select: mockSelect,
     })
 
-    const { result } = renderHook(() => useShots('sc1'), { wrapper })
+    const { result } = renderHook(() => useShots('comp1'), { wrapper })
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -71,7 +71,7 @@ describe('useShots', () => {
     expect(result.current.data).toEqual(mockShots)
   })
 
-  it('should skip query when scene_id is undefined', () => {
+  it('should skip query when script_component_id is undefined', () => {
     const { result } = renderHook(() => useShots(undefined), { wrapper })
 
     expect(result.current.data).toBeUndefined()
