@@ -8,7 +8,6 @@
 import { expect, afterEach, beforeEach, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import { resetFactoryIds } from './factories'
 
 /**
  * BroadcastChannel Polyfill for Node Test Environment
@@ -62,10 +61,6 @@ vi.mock('@elevanaltd/shared-lib/client', async () => {
 })
 
 expect.extend({})
-
-beforeEach(() => {
-  resetFactoryIds()
-})
 
 afterEach(() => {
   cleanup()
