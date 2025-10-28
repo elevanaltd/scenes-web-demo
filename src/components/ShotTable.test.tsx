@@ -55,7 +55,7 @@ describe('ShotTable', () => {
       shot_type: 'WS',
       location_start_point: 'Standard',
       location_other: null,
-      tracking_type: 'Establishing',
+      movement_type: 'Establishing',
       subject: 'Standard',
       subject_other: null,
       variant: null,
