@@ -50,7 +50,7 @@ describe('useShots - Post-Migration (script_component_id direct FK)', () => {
         shot_type: 'WS',
         location_start_point: 'Standard',
         location_other: null,
-        tracking_type: 'Tracking',
+        movement_type: 'Tracking',
         subject: 'Building',
         subject_other: null,
         variant: 'front entrance',
@@ -66,7 +66,7 @@ describe('useShots - Post-Migration (script_component_id direct FK)', () => {
         shot_type: 'MID',
         location_start_point: 'Other',
         location_other: 'parking lot',
-        tracking_type: 'Standard',
+        movement_type: 'Standard',
         subject: 'Other',
         subject_other: 'security camera',
         variant: 'close detail',
@@ -104,7 +104,7 @@ describe('useShots - Post-Migration (script_component_id direct FK)', () => {
     // Verify new behavior
     expect(mockSupabase.from).toHaveBeenCalledWith('shots')
     expect(mockSelect).toHaveBeenCalledWith(
-      'id, script_component_id, shot_number, shot_type, location_start_point, location_other, tracking_type, subject, subject_other, variant, action, owner_user_id, created_at, updated_at'
+      'id, script_component_id, shot_number, shot_type, location_start_point, location_other, movement_type, subject, subject_other, variant, action, owner_user_id, created_at, updated_at'
     )
     expect(mockEq).toHaveBeenCalledWith('script_component_id', 'component-uuid')
     expect(mockOrder).toHaveBeenCalledWith('shot_number', { ascending: true })
@@ -162,7 +162,7 @@ describe('useShots - Post-Migration (script_component_id direct FK)', () => {
         shot_number: 1,
         shot_type: 'WS',
         location_start_point: 'Standard',
-        tracking_type: 'Establishing',
+        movement_type: 'Establishing',
         subject: 'Building',
         variant: null,
         action: null,
@@ -176,7 +176,7 @@ describe('useShots - Post-Migration (script_component_id direct FK)', () => {
         shot_number: 2,
         shot_type: 'MID',
         location_start_point: 'Standard',
-        tracking_type: 'Standard',
+        movement_type: 'Standard',
         subject: 'Building',
         variant: 'side view',
         action: 'zoom in',
@@ -190,7 +190,7 @@ describe('useShots - Post-Migration (script_component_id direct FK)', () => {
         shot_number: 3,
         shot_type: 'CU',
         location_start_point: 'Standard',
-        tracking_type: 'Photos',
+        movement_type: 'Photos',
         subject: 'Building',
         variant: 'detail shot',
         action: null,
@@ -239,7 +239,7 @@ describe('useShots - Post-Migration (script_component_id direct FK)', () => {
         shot_type: 'FP',
         location_start_point: 'Standard',
         location_other: null,
-        tracking_type: 'Tracking',
+        movement_type: 'Tracking',
         subject: 'Standard',
         subject_other: null,
         variant: null,

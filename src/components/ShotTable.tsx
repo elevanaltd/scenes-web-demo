@@ -18,7 +18,7 @@ interface ShotTableProps {
  *
  * Displays shots for a script component with autocomplete fields for each user-facing column.
  * Uses new clean schema:
- * - 8 user-facing fields: shot_type, location_start_point, location_other, tracking_type, subject, subject_other, variant, action
+ * - 8 user-facing fields: shot_type, location_start_point, location_other, movement_type, subject, subject_other, variant, action
  * - 2 hidden fields: completed, owner_user_id
  *
  * Auto-saves on blur (via AutocompleteField component).
@@ -161,12 +161,12 @@ export function ShotTable({ component }: ShotTableProps) {
             <thead>
               <tr>
                 <th className="col-number">#</th>
-                <th className="col-shot-type">Shot Type</th>
+                <th className="col-movement">Movement</th>
                 <th className="col-location">Location</th>
-                <th className="col-tracking">Tracking</th>
+                <th className="col-shot-type">Shot Type</th>
                 <th className="col-subject">Subject</th>
-                <th className="col-variant">Variant</th>
                 <th className="col-action">Action</th>
+                <th className="col-variant">Variant</th>
                 <th className="col-actions">Actions</th>
               </tr>
             </thead>
@@ -177,12 +177,12 @@ export function ShotTable({ component }: ShotTableProps) {
                     {/* Shot Number (read-only) */}
                     <td className="col-number">{shot.shot_number}</td>
 
-                    {/* shot_type - Fixed list autocomplete (no "Other") */}
-                    <td className="col-shot-type">
+                    {/* movement_type - Fixed list autocomplete (no "Other") - NOW FIRST */}
+                    <td className="col-movement">
                       <AutocompleteField
-                        value={shot.shot_type || null}
-                        onChange={(value) => handleAutocompleteChange(shot.id, 'shot_type', value)}
-                        options={dropdownMap['shot_type'] || []}
+                        value={shot.movement_type || null}
+                        onChange={(value) => handleAutocompleteChange(shot.id, 'movement_type', value)}
+                        options={dropdownMap['movement_type'] || []}
                         allowOther={false}
                         placeholder="Select..."
                         isLoading={dropdownsQuery.isLoading}
@@ -204,17 +204,19 @@ export function ShotTable({ component }: ShotTableProps) {
                       />
                     </td>
 
-                    {/* tracking_type - Fixed list autocomplete (no "Other") */}
-                    <td className="col-tracking">
-                      <AutocompleteField
-                        value={shot.tracking_type || null}
-                        onChange={(value) => handleAutocompleteChange(shot.id, 'tracking_type', value)}
-                        options={dropdownMap['tracking_type'] || []}
-                        allowOther={false}
-                        placeholder="Select..."
-                        isLoading={dropdownsQuery.isLoading}
-                      />
-                    </td>
+                    {/* shot_type - Fixed list autocomplete (no "Other") - CONDITIONAL: Hide for Tracking/Establishing */}
+                    {(!shot.movement_type || !['Tracking', 'Establishing'].includes(shot.movement_type)) && (
+                      <td className="col-shot-type">
+                        <AutocompleteField
+                          value={shot.shot_type || null}
+                          onChange={(value) => handleAutocompleteChange(shot.id, 'shot_type', value)}
+                          options={dropdownMap['shot_type'] || []}
+                          allowOther={false}
+                          placeholder="Select..."
+                          isLoading={dropdownsQuery.isLoading}
+                        />
+                      </td>
+                    )}
 
                     {/* subject - Flexible list with "Other" */}
                     <td className="col-subject">
@@ -231,6 +233,19 @@ export function ShotTable({ component }: ShotTableProps) {
                       />
                     </td>
 
+                    {/* action - Free text with debounced save - CONDITIONAL: Hide for Photos */}
+                    {(!shot.movement_type || shot.movement_type !== 'Photos') && (
+                      <td className="col-action">
+                        <input
+                          type="text"
+                          value={pendingMutations[`${shot.id}-action`] ?? shot.action ?? ''}
+                          onChange={(e) => handleTextFieldChange(shot.id, 'action', e.target.value)}
+                          placeholder="e.g., demo, movement"
+                          className="form-control form-control-text"
+                        />
+                      </td>
+                    )}
+
                     {/* variant - Free text with debounced save */}
                     <td className="col-variant">
                       <input
@@ -238,17 +253,6 @@ export function ShotTable({ component }: ShotTableProps) {
                         value={pendingMutations[`${shot.id}-variant`] ?? shot.variant ?? ''}
                         onChange={(e) => handleTextFieldChange(shot.id, 'variant', e.target.value)}
                         placeholder="e.g., front door, siemens"
-                        className="form-control form-control-text"
-                      />
-                    </td>
-
-                    {/* action - Free text with debounced save */}
-                    <td className="col-action">
-                      <input
-                        type="text"
-                        value={pendingMutations[`${shot.id}-action`] ?? shot.action ?? ''}
-                        onChange={(e) => handleTextFieldChange(shot.id, 'action', e.target.value)}
-                        placeholder="e.g., demo, movement"
                         className="form-control form-control-text"
                       />
                     </td>

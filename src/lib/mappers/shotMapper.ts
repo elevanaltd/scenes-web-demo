@@ -16,7 +16,7 @@ interface ShotRow {
   shot_type?: string | null
   location_start_point?: string | null
   location_other?: string | null
-  tracking_type?: string | null
+  movement_type?: string | null
   subject?: string | null
   subject_other?: string | null
   variant?: string | null
@@ -35,7 +35,7 @@ export function mapShotRowToShot(row: ShotRow): Shot {
     shot_type: row.shot_type ?? null,
     location_start_point: row.location_start_point ?? null,
     location_other: row.location_other ?? null,
-    tracking_type: row.tracking_type ?? null,
+    movement_type: row.movement_type ?? null,
     subject: row.subject ?? null,
     subject_other: row.subject_other ?? null,
     variant: row.variant ?? null,

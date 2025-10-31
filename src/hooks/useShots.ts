@@ -18,10 +18,10 @@ export function useShots(scriptComponentId: string | undefined) {
       const supabase = getSupabaseClient()
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
+      const { data, error} = await (supabase as any)
         .from('shots')
         .select(
-          'id, script_component_id, shot_number, shot_type, location_start_point, location_other, tracking_type, subject, subject_other, variant, action, owner_user_id, created_at, updated_at'
+          'id, script_component_id, shot_number, shot_type, location_start_point, location_other, movement_type, subject, subject_other, variant, action, owner_user_id, created_at, updated_at'
         )
         .eq('script_component_id', scriptComponentId)
         .order('shot_number', { ascending: true })

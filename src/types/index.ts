@@ -53,7 +53,7 @@ export interface Shot {
   shot_type: string | null // Dropdown: WS, MID, CU, FP, OBJ-L, OBJ-R, UNDER (no "Other")
   location_start_point: string | null // Dropdown: Standard, Other (with "Other")
   location_other: string | null // Free text: shown when location_start_point = "Other"
-  tracking_type: string | null // Dropdown: Tracking, Establishing, Standard, Photos (no "Other")
+  movement_type: string | null // Dropdown: Tracking, Establishing, Standard, Photos (no "Other")
   subject: string | null // Dropdown: Standard, Other (with "Other")
   subject_other: string | null // Free text: shown when subject = "Other"
   variant: string | null // Free text: e.g., "front door", "siemens"
@@ -78,7 +78,7 @@ export interface ProductionNote {
 
 export interface DropdownOption {
   id: string
-  field_name: 'shot_type' | 'location_start_point' | 'tracking_type' | 'subject'
+  field_name: 'shot_type' | 'location_start_point' | 'movement_type' | 'subject'
   option_value: string
   option_label: string
   sort_order: number

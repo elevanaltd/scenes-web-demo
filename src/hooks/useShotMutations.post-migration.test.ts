@@ -48,7 +48,7 @@ describe('useShotMutations - Post-Migration (script_component_id interface)', ()
       shot_number: 1,
       shot_type: 'WS',
       location_start_point: 'Standard',
-      tracking_type: 'Tracking',
+      movement_type: 'Tracking',
       subject: 'Building',
       owner_user_id: 'user-1',
       created_at: '2025-01-01',
@@ -76,7 +76,7 @@ describe('useShotMutations - Post-Migration (script_component_id interface)', ()
       shot_number: 1,
       shot_type: 'WS',
       location_start_point: 'Standard',
-      tracking_type: 'Tracking',
+      movement_type: 'Tracking',
       subject: 'Building',
     }
 
@@ -284,7 +284,7 @@ describe('useShotMutations - Post-Migration (script_component_id interface)', ()
       shot_number: 1,
       shot_type: 'WS',
       location_start_point: 'Standard',
-      tracking_type: 'Tracking',
+      movement_type: 'Tracking',
       subject: 'Building',
     }
 
